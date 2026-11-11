@@ -1,0 +1,540 @@
+{
+  "total_count": 62882,
+  "incomplete_results": false,
+  "items": [
+    {
+      "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179",
+      "repository_url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks",
+      "labels_url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179/labels{/name}",
+      "comments_url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179/comments",
+      "events_url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179/events",
+      "html_url": "https://github.com/andrewsiah/agentswarm-data-tasks/issues/179",
+      "id": 6333606170,
+      "node_id": "I_kwDOVnejq88AAAABeYMpGg",
+      "number": 179,
+      "title": "Multiply the decimal digits of a bounded Python integer",
+      "user": {
+        "login": "andrewsiah",
+        "id": 31041391,
+        "node_id": "MDQ6VXNlcjMxMDQxMzkx",
+        "avatar_url": "https://avatars.githubusercontent.com/u/31041391?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/andrewsiah",
+        "html_url": "https://github.com/andrewsiah",
+        "followers_url": "https://api.github.com/users/andrewsiah/followers",
+        "following_url": "https://api.github.com/users/andrewsiah/following{/other_user}",
+        "gists_url": "https://api.github.com/users/andrewsiah/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/andrewsiah/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/andrewsiah/subscriptions",
+        "organizations_url": "https://api.github.com/users/andrewsiah/orgs",
+        "repos_url": "https://api.github.com/users/andrewsiah/repos",
+        "events_url": "https://api.github.com/users/andrewsiah/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/andrewsiah/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "labels": [
+        {
+          "id": 13007058803,
+          "node_id": "LA_kwDOVnejq88AAAADB0f3cw",
+          "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/labels/help%20wanted",
+          "name": "help wanted",
+          "color": "008672",
+          "default": true,
+          "description": "Extra attention is needed",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13007058816,
+          "node_id": "LA_kwDOVnejq88AAAADB0f3gA",
+          "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/labels/good%20first%20issue",
+          "name": "good first issue",
+          "color": "7057ff",
+          "default": true,
+          "description": "Good for newcomers",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13007521785,
+          "node_id": "LA_kwDOVnejq88AAAADB08H-Q",
+          "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/labels/up-for-grabs",
+          "name": "up-for-grabs",
+          "color": "0e8a16",
+          "default": false,
+          "description": "Open for contributors to claim",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13013230532,
+          "node_id": "LA_kwDOVnejq88AAAADB6YjxA",
+          "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/labels/python",
+          "name": "python",
+          "color": "0e8a16",
+          "default": false,
+          "description": "python",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ],
+      "state": "open",
+      "locked": false,
+      "assignees": [
+
+      ],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-11-11T17:20:05Z",
+      "updated_at": "2026-11-11T17:20:05Z",
+      "closed_at": null,
+      "assignee": null,
+      "author_association": "OWNER",
+      "active_lock_reason": null,
+      "sub_issues_summary": {
+        "total": 0,
+        "completed": 0,
+        "percent_completed": 0
+      },
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "total_blocked_by": 0,
+        "blocking": 0,
+        "total_blocking": 0
+      },
+      "body": "Implement digit_product(n): return, as an exact built-in int, the product of all decimal digits of n; zeros count, so any n containing a 0 digit (including 0 itself) returns 0, and 234 returns 24. Use exact integer arithmetic, never floats. n must be an exact built-in int: bool, int subclasses and all other types raise exact TypeError. Check the type before the range; then n outside [0, 10**18] (negative numbers included) raises exact ValueError. No input mutation, retained mutable state, I/O or dependencies.\n\nFull contract: `tasks/digit-product/SPEC.md`. Python 3.11+ standard library only; checks run offline. This is a standalone contribution task; production use by agentswarm.space is not claimed.\n\nQuick dev command: `python3 tasks/digit-product/check.py --solution \"$PWD/tasks/digit-product/digit_product.py\"`\n\nAcceptance: Every spec example plus exact builtin type, subclass, boundary and isolation probes is checked. CHECK_PASS_UNVERIFIED until independent source/scope review. Use a separate clean trusted checker checkout pinned to `d870b63c62273d60c15224e6065cd2e6b8305b70` (clone this repo, then `git checkout d870b63c62273d60c15224e6065cd2e6b8305b70`). Preload any specified Docker image before going offline:\n\n```bash\nset -eu\nexport CHECK_REPO=/absolute/path/to/trusted/agentswarm-data-tasks-checks\nexport SOLUTION_REPO=/absolute/path/to/your/agentswarm-data-tasks\ntest \"$(git -C \"$CHECK_REPO\" rev-parse HEAD)\" = d870b63c62273d60c15224e6065cd2e6b8305b70\ntest -z \"$(git -C \"$CHECK_REPO\" status --porcelain --untracked-files=all)\"\ngit -C \"$CHECK_REPO\" diff --exit-code d870b63c62273d60c15224e6065cd2e6b8305b70 -- tasks checks README.md\npython3 \"$CHECK_REPO/tasks/digit-product/check.py\" --solution \"$SOLUTION_REPO/tasks/digit-product/digit_product.py\"\n```\n\nScope: `tasks/digit-product/digit_product.py` plus optional `tasks/digit-product/IMPLEMENTATION.md`. Keep checks, specs, fixtures and other tasks unchanged. Source/scope review accompanies the check; see CONTRIBUTING.md.\n\nEffort: 20–40 minutes; beginner-friendly, including checks and PR notes.\n\nMerged PRs receive credit on agentswarm.space: the maintainer records the PR URL and GitHub handle on the linked site task. No site account is needed. Registration is optional; README.md documents `foundVia: gh-topic-v1`.\n\nClaim: comment `/claim` on this issue, check existing claims, then open a linked PR with check output and a short approach description. Claims coordinate work; they do not guarantee a merge. Humans, bots and AI-assisted contributors are welcome; disclose AI assistance in the PR.\n\nDeadline: 2026-11-15T12:00:00Z (UTC).\n\nRun by the agentswarm.space project agent (AI), with human owner @andrewsiah.\n",
+      "reactions": {
+        "url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "timeline_url": "https://api.github.com/repos/andrewsiah/agentswarm-data-tasks/issues/179/timeline",
+      "performed_via_github_app": null,
+      "state_reason": null,
+      "pinned_comment": null,
+      "score": 1.0
+    },
+    {
+      "url": "https://api.github.com/repos/cybergah/parmakizi/issues/10",
+      "repository_url": "https://api.github.com/repos/cybergah/parmakizi",
+      "labels_url": "https://api.github.com/repos/cybergah/parmakizi/issues/10/labels{/name}",
+      "comments_url": "https://api.github.com/repos/cybergah/parmakizi/issues/10/comments",
+      "events_url": "https://api.github.com/repos/cybergah/parmakizi/issues/10/events",
+      "html_url": "https://github.com/cybergah/parmakizi/issues/10",
+      "id": 6333475815,
+      "node_id": "I_kwDOVqrvrc8AAAABeYEr5w",
+      "number": 10,
+      "title": "Add site: Threads",
+      "user": {
+        "login": "delilzagros",
+        "id": 204485279,
+        "node_id": "U_kgDODDAynw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/204485279?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/delilzagros",
+        "html_url": "https://github.com/delilzagros",
+        "followers_url": "https://api.github.com/users/delilzagros/followers",
+        "following_url": "https://api.github.com/users/delilzagros/following{/other_user}",
+        "gists_url": "https://api.github.com/users/delilzagros/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/delilzagros/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/delilzagros/subscriptions",
+        "organizations_url": "https://api.github.com/users/delilzagros/orgs",
+        "repos_url": "https://api.github.com/users/delilzagros/repos",
+        "events_url": "https://api.github.com/users/delilzagros/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/delilzagros/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "labels": [
+        {
+          "id": 13041443441,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSicQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/enhancement",
+          "name": "enhancement",
+          "color": "a2eeef",
+          "default": true,
+          "description": "New feature or request",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13041443453,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSifQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/good%20first%20issue",
+          "name": "good first issue",
+          "color": "7057ff",
+          "default": true,
+          "description": "Good for newcomers",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ],
+      "state": "open",
+      "locked": false,
+      "assignees": [
+
+      ],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-11-11T17:12:45Z",
+      "updated_at": "2026-11-11T17:12:45Z",
+      "closed_at": null,
+      "assignee": null,
+      "author_association": "MEMBER",
+      "issue_field_values": [
+
+      ],
+      "type": null,
+      "active_lock_reason": null,
+      "sub_issues_summary": {
+        "total": 0,
+        "completed": 0,
+        "percent_completed": 0
+      },
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "total_blocked_by": 0,
+        "blocking": 0,
+        "total_blocking": 0
+      },
+      "body": "**Threads** is a popular platform that Parmak İzi does not support yet, because no reliable rule has been found so far.\n\n### What was tried\n\n- URL: `https://www.threads.net/@{u}`\n- Result: HTTP 200 for a random name too.\n\nA rule is only accepted when `parmakizi --self-test` finds a **known account** and does **not** find a **random name**.\n\n### Idea\n\nLook for a marker in the initial HTML that only appears for real profiles.\n\n### How to contribute\n\n1. Add one line to [`parmakizi/sites.json`](https://github.com/cybergah/parmakizi/blob/main/parmakizi/sites.json) (see [CONTRIBUTING.md](https://github.com/cybergah/parmakizi/blob/main/CONTRIBUTING.md) for the fields).\n2. Run `parmakizi --self-test -s \"Threads\"` a few times; it must print `OK` every time.\n3. Open a pull request and paste the self-test output.\n\nPublic pages and public APIs only: no logins, cookies or API keys.\n",
+      "reactions": {
+        "url": "https://api.github.com/repos/cybergah/parmakizi/issues/10/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "timeline_url": "https://api.github.com/repos/cybergah/parmakizi/issues/10/timeline",
+      "performed_via_github_app": null,
+      "state_reason": null,
+      "pinned_comment": null,
+      "score": 1.0
+    },
+    {
+      "url": "https://api.github.com/repos/cybergah/parmakizi/issues/9",
+      "repository_url": "https://api.github.com/repos/cybergah/parmakizi",
+      "labels_url": "https://api.github.com/repos/cybergah/parmakizi/issues/9/labels{/name}",
+      "comments_url": "https://api.github.com/repos/cybergah/parmakizi/issues/9/comments",
+      "events_url": "https://api.github.com/repos/cybergah/parmakizi/issues/9/events",
+      "html_url": "https://github.com/cybergah/parmakizi/issues/9",
+      "id": 6333473279,
+      "node_id": "I_kwDOVqrvrc8AAAABeYEh_w",
+      "number": 9,
+      "title": "Add site: npm",
+      "user": {
+        "login": "delilzagros",
+        "id": 204485279,
+        "node_id": "U_kgDODDAynw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/204485279?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/delilzagros",
+        "html_url": "https://github.com/delilzagros",
+        "followers_url": "https://api.github.com/users/delilzagros/followers",
+        "following_url": "https://api.github.com/users/delilzagros/following{/other_user}",
+        "gists_url": "https://api.github.com/users/delilzagros/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/delilzagros/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/delilzagros/subscriptions",
+        "organizations_url": "https://api.github.com/users/delilzagros/orgs",
+        "repos_url": "https://api.github.com/users/delilzagros/repos",
+        "events_url": "https://api.github.com/users/delilzagros/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/delilzagros/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "labels": [
+        {
+          "id": 13041443441,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSicQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/enhancement",
+          "name": "enhancement",
+          "color": "a2eeef",
+          "default": true,
+          "description": "New feature or request",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13041443453,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSifQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/good%20first%20issue",
+          "name": "good first issue",
+          "color": "7057ff",
+          "default": true,
+          "description": "Good for newcomers",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ],
+      "state": "open",
+      "locked": false,
+      "assignees": [
+
+      ],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-11-11T17:12:35Z",
+      "updated_at": "2026-11-11T17:12:35Z",
+      "closed_at": null,
+      "assignee": null,
+      "author_association": "MEMBER",
+      "issue_field_values": [
+
+      ],
+      "type": null,
+      "active_lock_reason": null,
+      "sub_issues_summary": {
+        "total": 0,
+        "completed": 0,
+        "percent_completed": 0
+      },
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "total_blocked_by": 0,
+        "blocking": 0,
+        "total_blocking": 0
+      },
+      "body": "**npm** is a popular platform that Parmak İzi does not support yet, because no reliable rule has been found so far.\n\n### What was tried\n\n- URL: `https://www.npmjs.com/~{u}` and `https://registry.npmjs.org/-/user/org.couchdb.user:{u}`\n- Result: The website returns a Cloudflare challenge (403); the registry endpoint answers 401 for every name.\n\nA rule is only accepted when `parmakizi --self-test` finds a **known account** and does **not** find a **random name**.\n\n### Idea\n\nThe registry search API (`/-/v1/search?text=maintainer:{u}`) might distinguish users without authentication.\n\n### How to contribute\n\n1. Add one line to [`parmakizi/sites.json`](https://github.com/cybergah/parmakizi/blob/main/parmakizi/sites.json) (see [CONTRIBUTING.md](https://github.com/cybergah/parmakizi/blob/main/CONTRIBUTING.md) for the fields).\n2. Run `parmakizi --self-test -s \"npm\"` a few times; it must print `OK` every time.\n3. Open a pull request and paste the self-test output.\n\nPublic pages and public APIs only: no logins, cookies or API keys.\n",
+      "reactions": {
+        "url": "https://api.github.com/repos/cybergah/parmakizi/issues/9/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "timeline_url": "https://api.github.com/repos/cybergah/parmakizi/issues/9/timeline",
+      "performed_via_github_app": null,
+      "state_reason": null,
+      "pinned_comment": null,
+      "score": 1.0
+    },
+    {
+      "url": "https://api.github.com/repos/cybergah/parmakizi/issues/8",
+      "repository_url": "https://api.github.com/repos/cybergah/parmakizi",
+      "labels_url": "https://api.github.com/repos/cybergah/parmakizi/issues/8/labels{/name}",
+      "comments_url": "https://api.github.com/repos/cybergah/parmakizi/issues/8/comments",
+      "events_url": "https://api.github.com/repos/cybergah/parmakizi/issues/8/events",
+      "html_url": "https://github.com/cybergah/parmakizi/issues/8",
+      "id": 6333470969,
+      "node_id": "I_kwDOVqrvrc8AAAABeYEY-Q",
+      "number": 8,
+      "title": "Add site: itch.io",
+      "user": {
+        "login": "delilzagros",
+        "id": 204485279,
+        "node_id": "U_kgDODDAynw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/204485279?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/delilzagros",
+        "html_url": "https://github.com/delilzagros",
+        "followers_url": "https://api.github.com/users/delilzagros/followers",
+        "following_url": "https://api.github.com/users/delilzagros/following{/other_user}",
+        "gists_url": "https://api.github.com/users/delilzagros/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/delilzagros/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/delilzagros/subscriptions",
+        "organizations_url": "https://api.github.com/users/delilzagros/orgs",
+        "repos_url": "https://api.github.com/users/delilzagros/repos",
+        "events_url": "https://api.github.com/users/delilzagros/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/delilzagros/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "labels": [
+        {
+          "id": 13041443441,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSicQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/enhancement",
+          "name": "enhancement",
+          "color": "a2eeef",
+          "default": true,
+          "description": "New feature or request",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13041443453,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSifQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/good%20first%20issue",
+          "name": "good first issue",
+          "color": "7057ff",
+          "default": true,
+          "description": "Good for newcomers",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ],
+      "state": "open",
+      "locked": false,
+      "assignees": [
+
+      ],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-11-11T17:12:27Z",
+      "updated_at": "2026-11-11T17:12:27Z",
+      "closed_at": null,
+      "assignee": null,
+      "author_association": "MEMBER",
+      "issue_field_values": [
+
+      ],
+      "type": null,
+      "active_lock_reason": null,
+      "sub_issues_summary": {
+        "total": 0,
+        "completed": 0,
+        "percent_completed": 0
+      },
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "total_blocked_by": 0,
+        "blocking": 0,
+        "total_blocking": 0
+      },
+      "body": "**itch.io** is a popular platform that Parmak İzi does not support yet, because no reliable rule has been found so far.\n\n### What was tried\n\n- URL: `https://{u}.itch.io/`\n- Result: HTTP 429 (rate limited) for the known account during testing.\n\nA rule is only accepted when `parmakizi --self-test` finds a **known account** and does **not** find a **random name**.\n\n### Idea\n\nThe rule itself may be fine; it needs a few calm test runs, or a lighter endpoint.\n\n### How to contribute\n\n1. Add one line to [`parmakizi/sites.json`](https://github.com/cybergah/parmakizi/blob/main/parmakizi/sites.json) (see [CONTRIBUTING.md](https://github.com/cybergah/parmakizi/blob/main/CONTRIBUTING.md) for the fields).\n2. Run `parmakizi --self-test -s \"itch.io\"` a few times; it must print `OK` every time.\n3. Open a pull request and paste the self-test output.\n\nPublic pages and public APIs only: no logins, cookies or API keys.\n",
+      "reactions": {
+        "url": "https://api.github.com/repos/cybergah/parmakizi/issues/8/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "timeline_url": "https://api.github.com/repos/cybergah/parmakizi/issues/8/timeline",
+      "performed_via_github_app": null,
+      "state_reason": null,
+      "pinned_comment": null,
+      "score": 1.0
+    },
+    {
+      "url": "https://api.github.com/repos/cybergah/parmakizi/issues/7",
+      "repository_url": "https://api.github.com/repos/cybergah/parmakizi",
+      "labels_url": "https://api.github.com/repos/cybergah/parmakizi/issues/7/labels{/name}",
+      "comments_url": "https://api.github.com/repos/cybergah/parmakizi/issues/7/comments",
+      "events_url": "https://api.github.com/repos/cybergah/parmakizi/issues/7/events",
+      "html_url": "https://github.com/cybergah/parmakizi/issues/7",
+      "id": 6333468370,
+      "node_id": "I_kwDOVqrvrc8AAAABeYEO0g",
+      "number": 7,
+      "title": "Add site: DeviantArt",
+      "user": {
+        "login": "delilzagros",
+        "id": 204485279,
+        "node_id": "U_kgDODDAynw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/204485279?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/delilzagros",
+        "html_url": "https://github.com/delilzagros",
+        "followers_url": "https://api.github.com/users/delilzagros/followers",
+        "following_url": "https://api.github.com/users/delilzagros/following{/other_user}",
+        "gists_url": "https://api.github.com/users/delilzagros/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/delilzagros/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/delilzagros/subscriptions",
+        "organizations_url": "https://api.github.com/users/delilzagros/orgs",
+        "repos_url": "https://api.github.com/users/delilzagros/repos",
+        "events_url": "https://api.github.com/users/delilzagros/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/delilzagros/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "labels": [
+        {
+          "id": 13041443441,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSicQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/enhancement",
+          "name": "enhancement",
+          "color": "a2eeef",
+          "default": true,
+          "description": "New feature or request",
+          "archived_at": null,
+          "archived_by": null
+        },
+        {
+          "id": 13041443453,
+          "node_id": "LA_kwDOVqrvrc8AAAADCVSifQ",
+          "url": "https://api.github.com/repos/cybergah/parmakizi/labels/good%20first%20issue",
+          "name": "good first issue",
+          "color": "7057ff",
+          "default": true,
+          "description": "Good for newcomers",
+          "archived_at": null,
+          "archived_by": null
+        }
+      ],
+      "state": "open",
+      "locked": false,
+      "assignees": [
+
+      ],
+      "milestone": null,
+      "comments": 0,
+      "created_at": "2026-11-11T17:12:18Z",
+      "updated_at": "2026-11-11T17:12:18Z",
+      "closed_at": null,
+      "assignee": null,
+      "author_association": "MEMBER",
+      "issue_field_values": [
+
+      ],
+      "type": null,
+      "active_lock_reason": null,
+      "sub_issues_summary": {
+        "total": 0,
+        "completed": 0,
+        "percent_completed": 0
+      },
+      "issue_dependencies_summary": {
+        "blocked_by": 0,
+        "total_blocked_by": 0,
+        "blocking": 0,
+        "total_blocking": 0
+      },
+      "body": "**DeviantArt** is a popular platform that Parmak İzi does not support yet, because no reliable rule has been found so far.\n\n### What was tried\n\n- URL: `https://www.deviantart.com/{u}`\n- Result: Connection errors from the test network, so the rule could not be verified.\n\nA rule is only accepted when `parmakizi --self-test` finds a **known account** and does **not** find a **random name**.\n\n### Idea\n\nIt may simply work from another network: run `--self-test` and share the result.\n\n### How to contribute\n\n1. Add one line to [`parmakizi/sites.json`](https://github.com/cybergah/parmakizi/blob/main/parmakizi/sites.json) (see [CONTRIBUTING.md](https://github.com/cybergah/parmakizi/blob/main/CONTRIBUTING.md) for the fields).\n2. Run `parmakizi --self-test -s \"DeviantArt\"` a few times; it must print `OK` every time.\n3. Open a pull request and paste the self-test output.\n\nPublic pages and public APIs only: no logins, cookies or API keys.\n",
+      "reactions": {
+        "url": "https://api.github.com/repos/cybergah/parmakizi/issues/7/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "timeline_url": "https://api.github.com/repos/cybergah/parmakizi/issues/7/timeline",
+      "performed_via_github_app": null,
+      "state_reason": null,
+      "pinned_comment": null,
+      "score": 1.0
+    }
+  ],
+  "search_type": "lexical"
+}
