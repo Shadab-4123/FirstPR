@@ -16,6 +16,15 @@ services:
         sync: false
       - key: LOG_LEVEL
         value: INFO
+      # GitHub sign-in (see backend/.env.example). Values are entered in the dashboard.
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: APP_URL
+        value: https://firstpr-web.onrender.com
 
   - type: web
     name: firstpr-web

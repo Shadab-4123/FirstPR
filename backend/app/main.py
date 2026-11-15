@@ -1,16 +1,31 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_error_handlers
 from app.api.routes import router
 from app.auth.routes import router as auth_router
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
+
+log = logging.getLogger("firstpr.app")
+SIGNIN_SETTINGS = ("github_client_id", "github_client_secret", "token_encryption_key", "app_url")
+
+
+def _log_signin_config(settings: Settings) -> None:
+    """Say at startup whether GitHub sign-in can work, naming (never showing) what's missing."""
+    missing = [name.upper() for name in SIGNIN_SETTINGS if not getattr(settings, name)]
+    if missing:
+        log.warning("GitHub sign-in disabled: missing settings", extra={"missing": missing})
+    else:
+        log.info("GitHub sign-in enabled", extra={"app_url": settings.app_url})
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    _log_signin_config(settings)
 
     app = FastAPI(
         title="FirstPR API",
