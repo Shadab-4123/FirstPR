@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
 
+    # Difficulty model file; empty = ml/difficulty_model.joblib in the repo checkout.
+    difficulty_model_path: str = ""
+
     # Sync worker tuning
     github_max_retries: int = 5
     github_max_rate_limit_wait_s: float = 900.0

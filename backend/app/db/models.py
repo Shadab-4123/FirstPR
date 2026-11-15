@@ -98,6 +98,11 @@ class Issue(Base):
     difficulty_score: Mapped[float | None] = mapped_column(Float)
     difficulty_label: Mapped[str | None] = mapped_column(String(10))
     est_hours: Mapped[float | None] = mapped_column(Float)
+    # Which method produced difficulty_label: "model_v1" (ml/EVAL.md) or
+    # "baseline_heuristic" when the model can't score it yet (e.g. text not refreshed).
+    difficulty_method: Mapped[str | None] = mapped_column(String(30))
+    difficulty_confidence: Mapped[float | None] = mapped_column(Float)  # model's top probability
+    difficulty_reasons: Mapped[list[str]] = mapped_column(JSONB, server_default="[]")
 
     # Who it suits and what kind of work it is (app/scoring/classify.py). Recomputed
     # for every issue after each sync, so a rule change applies to old rows too.

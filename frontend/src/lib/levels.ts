@@ -13,7 +13,7 @@ export const LEVEL_INFO: Record<Level, LevelInfo> = {
     title: 'New to open source',
     short: 'For newcomers',
     who: "You've never opened a pull request, or only one or two.",
-    what: 'Maintainers labelled these "good first issue", and the description suggests a small change.',
+    what: 'Maintainers labelled these "good first issue", and our size estimate doesn\'t flag them as large.',
   },
   some: {
     title: 'Some experience',

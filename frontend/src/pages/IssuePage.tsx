@@ -108,6 +108,7 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
             <Fact term="Estimated size">
               <DifficultyMeter label={issue.difficulty_label} reasons={scores.difficulty.reasons} />
               <Reasons items={scores.difficulty.reasons} />
+              <ConfidenceNote difficulty={scores.difficulty} />
             </Fact>
             {scores.health.score !== null && (
               <Fact term="Repo health">
@@ -128,7 +129,12 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
             )}
           </dl>
           <p className="mt-3 text-xs leading-relaxed text-muted">
-            Size and health come from simple formulas, not a person reading the issue. Treat them as a hint.
+            Size is estimated from the issue text by a model trained on 3,291 past issues. It's right about 4
+            times in 10, and rarely mistakes a hard issue for an easy one.{' '}
+            <a href={EVAL_URL} target="_blank" rel="noreferrer" className="underline">
+              How it was tested
+            </a>
+            . Health comes from a simple formula. Treat both as hints, not promises.
           </p>
 
           <a
@@ -143,6 +149,20 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
         </aside>
       </div>
     </article>
+  )
+}
+
+const EVAL_URL = 'https://github.com/Shadab-4123/FirstPR/blob/main/ml/EVAL.md'
+
+/** Numbers from ml/EVAL.md: right 61% of the time when confident, 38% otherwise. */
+const ConfidenceNote = ({ difficulty }: { difficulty: IssueDetail['score_breakdown']['difficulty'] }) => {
+  if (difficulty.method !== 'model_v1' || difficulty.confidence === null || difficulty.confidence === undefined) {
+    return <p className="mt-1.5 text-xs text-muted">Rough guess from a simple formula. Our model hasn't scored this one yet.</p>
+  }
+  return difficulty.confidence >= 0.6 ? (
+    <p className="mt-1.5 text-xs text-muted">Fairly confident: estimates like this are right about 6 times in 10.</p>
+  ) : (
+    <p className="mt-1.5 text-xs text-muted">Low confidence: estimates like this are right about 4 times in 10.</p>
   )
 }
 

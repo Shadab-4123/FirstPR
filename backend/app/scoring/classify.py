@@ -3,9 +3,12 @@
 Two simple, documented rules, so the UI can say *why* an issue is in a level:
 
 Level: who is this issue a good fit for?
-  new          "good first issue" AND estimated easy: maintainers marked it for
-               newcomers and the text suggests it's small.
-  some         "good first issue" rated medium or hard, or "help wanted" rated easy.
+  new          "good first issue" AND estimated easy or medium: maintainers marked it
+               for newcomers and the size estimate doesn't flag it as large. (Medium is
+               included because the model leans toward "hard", see ml/EVAL.md: requiring
+               "easy" would hide most genuinely small issues.)
+  some         "good first issue" estimated hard or not estimated, or "help wanted"
+               estimated easy.
   experienced  "help wanted" rated medium or hard, or a "bug" in a 1,000+ star repo
                (big codebases, triage norms, reviewers with high standards).
 
@@ -58,7 +61,7 @@ def has_tracked_label(labels: list[str]) -> bool:
 def contributor_level(labels: list[str], difficulty: str | None, repo_stars: int) -> Level:
     names = _normalised(labels)
     if GOOD_FIRST_ISSUE in names:
-        return "new" if difficulty == "easy" else "some"
+        return "new" if difficulty in ("easy", "medium") else "some"
     if HELP_WANTED in names:
         return "some" if difficulty == "easy" else "experienced"
     if BUG in names and repo_stars >= BIG_REPO_STARS:

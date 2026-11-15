@@ -21,6 +21,7 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.models import Repo, SyncRun
 from app.github.client import GitHubClient, GitHubError
+from app.ml.predict import DifficultyModel
 from app.scoring.classify import BIG_REPO_STARS, BUG, HELP_WANTED
 from app.sync.discover import (
     GOOD_FIRST_ISSUE,
@@ -32,8 +33,8 @@ from app.sync.discover import (
     needs_split,
 )
 from app.sync.mapping import map_issue, map_repo, repo_full_name_from_url
+from app.sync.scoring import rescore_issues
 from app.sync.upsert import (
-    reclassify_issues,
     rescore_repo_health,
     touch_repo,
     upsert_issue,
@@ -188,6 +189,7 @@ async def run_sync(
     session_factory: sessionmaker[Session], client: GitHubClient, languages: list[str], *,
     limit: int, lookback_days: int, min_stars: int,
     labels: tuple[str, ...] = (GOOD_FIRST_ISSUE, HELP_WANTED), big_repo_bugs: bool = True,
+    difficulty_model: DifficultyModel | None = None,
 ) -> SyncRun:
     with session_factory() as db:
         if abandoned := mark_abandoned_runs(db):
@@ -208,8 +210,9 @@ async def run_sync(
             if big_repo_bugs:
                 await sync_big_repo_bugs(db, client, stats)
             rescored = rescore_repo_health(db)
-            reclassified = reclassify_issues(db)  # after health: level reads repo stars
-            log.info("rescored", extra={"repos": rescored, "issues": reclassified})
+            # Difficulty (model), then level/type, which reads both difficulty and stars.
+            counts = rescore_issues(db, difficulty_model)
+            log.info("rescored", extra={"repos": rescored, **counts})
             run.status = "succeeded"
         except Exception as exc:  # record the failure, then re-raise for the exit code
             db.rollback()
@@ -271,6 +274,7 @@ def main() -> None:
                 lookback_days=args.lookback_days, min_stars=args.min_stars,
                 labels=labels,
                 big_repo_bugs=not args.beginner_only,
+                difficulty_model=DifficultyModel.load(),
             )
 
     asyncio.run(_run())

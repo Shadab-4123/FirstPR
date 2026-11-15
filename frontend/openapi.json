@@ -436,9 +436,23 @@
           },
           "method": {
             "type": "string",
-            "const": "baseline_heuristic",
+            "enum": [
+              "model_v1",
+              "baseline_heuristic"
+            ],
             "title": "Method",
             "default": "baseline_heuristic"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           }
         },
         "type": "object",

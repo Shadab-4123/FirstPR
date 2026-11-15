@@ -37,7 +37,9 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/pyproject.toml
-      - run: pip install .
+      # Editable, so the code finds ml/difficulty_model.joblib in this checkout.
+      # The `ml` extras bring scikit-learn for scoring issues with the model.
+      - run: pip install -e ".[ml]"
       - name: Apply pending migrations
         run: alembic upgrade head
       - name: Sync

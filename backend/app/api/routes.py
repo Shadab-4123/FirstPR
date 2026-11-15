@@ -36,7 +36,12 @@ LIST_EXCERPT_CHARS = 600  # a two-line preview; the full stored body is for the 
 
 
 def to_issue_out(issue: Issue) -> IssueOut:
-    reasons = score_difficulty(issue.difficulty_signals).reasons if issue.difficulty_signals else []
+    if issue.difficulty_method == "model_v1":
+        reasons = issue.difficulty_reasons
+    elif issue.difficulty_signals:  # heuristic: cheap to recompute its reasons
+        reasons = score_difficulty(issue.difficulty_signals).reasons
+    else:
+        reasons = []
     repo = issue.repo
     # Recomputed here only for its reasons; the stored score is what ranking uses.
     health = score_repo_health(
@@ -64,6 +69,8 @@ def to_issue_out(issue: Issue) -> IssueOut:
                 label=issue.difficulty_label,  # type: ignore[arg-type]
                 score=issue.difficulty_score,
                 reasons=reasons,
+                method=issue.difficulty_method or "baseline_heuristic",  # type: ignore[arg-type]
+                confidence=issue.difficulty_confidence,
             ),
             health=HealthBreakdown(
                 score=repo.health_score,

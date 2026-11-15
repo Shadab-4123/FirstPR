@@ -8,7 +8,7 @@ from app.scoring.classify import contribution_kind, contributor_level, has_track
     [
         (["good first issue"], "easy", 50, "new"),
         (["Good First Issue", "docs"], "easy", 50, "new"),  # label case doesn't matter
-        (["good first issue"], "medium", 50, "some"),
+        (["good first issue"], "medium", 50, "new"),  # model leans hard; medium still fits
         (["good first issue"], "hard", 50, "some"),
         (["good first issue"], None, 50, "some"),  # not estimated: don't promise "easy"
         (["help wanted"], "easy", 50, "some"),

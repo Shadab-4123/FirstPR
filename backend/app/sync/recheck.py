@@ -28,9 +28,10 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.models import Issue, SyncRun
 from app.github.client import GitHubClient, GitHubError
+from app.ml.predict import DifficultyModel
 from app.scoring.availability import check_availability, has_open_linked_pr
 from app.sync.mapping import BODY_EXCERPT_CHARS, map_issue
-from app.sync.upsert import reclassify_issues
+from app.sync.scoring import rescore_issues
 
 log = logging.getLogger("firstpr.recheck")
 
@@ -128,7 +129,8 @@ async def recheck_issue(
 
 
 async def run_recheck(
-    session_factory: sessionmaker[Session], client: GitHubClient, *, max_issues: int
+    session_factory: sessionmaker[Session], client: GitHubClient, *, max_issues: int,
+    difficulty_model: DifficultyModel | None = None,
 ) -> SyncRun:
     with session_factory() as db:
         run = SyncRun(query=f"recheck max={max_issues}")
@@ -141,7 +143,7 @@ async def run_recheck(
                 await recheck_issue(db, client, issue, stats, now)
                 if i % COMMIT_EVERY == 0:
                     db.commit()  # a crash loses at most COMMIT_EVERY checks
-            reclassify_issues(db)  # difficulty or labels may have changed
+            rescore_issues(db, difficulty_model)  # text, labels or comments may have changed
             run.status = "succeeded"
         except Exception as exc:
             db.rollback()
@@ -176,7 +178,8 @@ def main() -> None:
             settings.github_token, max_retries=settings.github_max_retries,
             max_wait_s=settings.github_max_rate_limit_wait_s,
         ) as client:
-            await run_recheck(SessionLocal, client, max_issues=args.max_issues)
+            await run_recheck(SessionLocal, client, max_issues=args.max_issues,
+                              difficulty_model=DifficultyModel.load())
 
     asyncio.run(_run())
 

@@ -124,9 +124,11 @@ export interface components {
             /**
              * Method
              * @default baseline_heuristic
-             * @constant
+             * @enum {string}
              */
-            method: "baseline_heuristic";
+            method: "model_v1" | "baseline_heuristic";
+            /** Confidence */
+            confidence?: number | null;
         };
         /** ErrorBody */
         ErrorBody: {

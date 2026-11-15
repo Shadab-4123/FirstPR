@@ -69,4 +69,8 @@ def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
         "difficulty_signals": signals,
         "difficulty_score": difficulty.score,
         "difficulty_label": difficulty.label,
+        # Provisional: the rescore at the end of the sync replaces these with the model's.
+        "difficulty_method": "baseline_heuristic",
+        "difficulty_confidence": None,
+        "difficulty_reasons": difficulty.reasons,
     }

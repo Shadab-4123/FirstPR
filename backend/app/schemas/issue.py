@@ -22,7 +22,10 @@ class DifficultyBreakdown(BaseModel):
     label: Literal["easy", "medium", "hard"] | None
     score: float | None
     reasons: list[str]
-    method: Literal["baseline_heuristic"] = "baseline_heuristic"
+    # model_v1: the trained model (ml/EVAL.md). baseline_heuristic: the hand-written
+    # formula, used until the model can score the issue.
+    method: Literal["model_v1", "baseline_heuristic"] = "baseline_heuristic"
+    confidence: float | None = None  # model only: probability of `label`, 0..1
 
 
 class HealthBreakdown(BaseModel):
