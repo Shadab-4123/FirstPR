@@ -143,3 +143,38 @@ class SyncRun(Base):
     github_requests: Mapped[int] = mapped_column(Integer, default=0)
     rate_limit_remaining: Mapped[int | None] = mapped_column(Integer)
     error: Mapped[str | None] = mapped_column(Text)
+
+
+class TrainingExample(Base):
+    """A closed good-first-issue fixed by a merged PR: ground truth for the difficulty model.
+
+    `raw` holds only what was visible while the issue was open (body, labels, comments
+    posted before the PR existed), so features can be recomputed without re-crawling and
+    without leaking the answer. The PR columns are the targets: how much work it took.
+    """
+
+    __tablename__ = "training_examples"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    issue_github_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    repo_full_name: Mapped[str] = mapped_column(String(200))
+    issue_number: Mapped[int] = mapped_column(Integer)
+    language: Mapped[str | None] = mapped_column(String(60))
+    issue_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    issue_closed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    raw: Mapped[dict[str, Any]] = mapped_column(JSONB)
+
+    # Targets, from the merged PR that closed the issue.
+    pr_number: Mapped[int] = mapped_column(Integer)
+    pr_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    pr_merged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    files_changed: Mapped[int] = mapped_column(Integer)
+    lines_changed: Mapped[int] = mapped_column(Integer)  # additions + deletions
+    pr_merged_hours: Mapped[float] = mapped_column(Float)  # issue opened -> PR merged
+
+    collected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    # The time-based train/test split sorts on this.
+    __table_args__ = (Index("ix_training_examples_closed_at", "issue_closed_at"),)

@@ -129,6 +129,25 @@ class GitHubClient:
         )
         return resp.data
 
+    async def graphql(self, query: str, variables: dict[str, Any]) -> Any:
+        """One GraphQL call. GitHub answers 200 even for query errors, so check `errors`.
+
+        GraphQL has its own rate-limit bucket (points per hour, not requests), and
+        it needs a token: unauthenticated GraphQL calls are rejected.
+        """
+        resp = await self.request(
+            "POST", "/graphql", json={"query": query, "variables": variables},
+            resource="graphql",
+        )
+        body = resp.data
+        if body.get("errors"):
+            messages = "; ".join(e.get("message", "?") for e in body["errors"])
+            # RATE_LIMITED comes back as a GraphQL error, not an HTTP status.
+            if any(e.get("type") == "RATE_LIMITED" for e in body["errors"]):
+                raise RateLimitExceeded(200, messages)
+            raise GitHubError(200, f"GraphQL: {messages}")
+        return body["data"]
+
     # ---- core request loop -----------------------------------------------
 
     async def request(
@@ -137,6 +156,7 @@ class GitHubClient:
         path: str,
         *,
         params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
         etag: str | None = None,
         resource: str = "core",
     ) -> GitHubResponse:
@@ -146,7 +166,9 @@ class GitHubClient:
         for attempt in range(self.max_retries + 1):
             await self._wait_for_bucket(resource)
             try:
-                resp = await self._http.request(method, path, params=params, headers=headers)
+                resp = await self._http.request(
+                    method, path, params=params, json=json, headers=headers
+                )
             except (httpx.TimeoutException, httpx.TransportError) as exc:
                 last_error = GitHubError(None, f"network error: {type(exc).__name__}")
                 await self._backoff(attempt, path, reason=last_error.message)
