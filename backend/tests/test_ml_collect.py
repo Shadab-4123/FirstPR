@@ -155,3 +155,16 @@ async def test_budget_is_spread_across_months_not_spent_on_the_first(db_session_
         windows = db.execute(select(TrainingExample.issue_closed_at).distinct()).scalars().all()
     assert saved == {"python": 4}
     assert len(windows) == 4  # one per 30-day window, not four from the newest
+
+
+@respx.mock
+async def test_a_failing_window_is_skipped_not_fatal(db_session_factory, nodes):
+    good = nodes[1]
+    responses = [httpx.Response(502)] * 6 + [  # first window: 502 through all retries
+        httpx.Response(200, json=_page([{**good, "databaseId": 7}], total=1)),
+    ]
+    respx.post(GRAPHQL).mock(side_effect=responses)
+    async with GitHubClient("t", sleep=_no_sleep, rand=lambda: 0.0) as client:
+        saved = await collect(db_session_factory, client, ["python"], per_language=2, months=2,
+                              min_stars=0, today=date(2025, 6, 30))
+    assert saved == {"python": 1}  # the second window still ran

@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.models import TrainingExample
-from app.github.client import GitHubClient
+from app.github.client import GitHubClient, GitHubError, RateLimitExceeded
 from app.sync.discover import Window, needs_split
 
 log = logging.getLogger("firstpr.ml.collect")
@@ -200,8 +200,20 @@ async def collect(
             for i, window in enumerate(windows):
                 months_left = len(windows) - i
                 share = -(-(per_language - saved) // months_left)  # ceiling division
-                saved += await collect_window(client, db, language, window, min_stars=min_stars,
-                                              budget=share, skipped=skipped)
+                try:
+                    saved += await collect_window(client, db, language, window,
+                                                  min_stars=min_stars, budget=share,
+                                                  skipped=skipped)
+                except RateLimitExceeded:
+                    raise  # waiting won't help within this run; stop cleanly
+                except GitHubError as exc:
+                    # One bad window (e.g. a 502 that outlasted the retries) shouldn't
+                    # throw away an hour of collecting. Its share rolls to later windows.
+                    db.rollback()
+                    skipped["window_failed"] += 1
+                    log.warning("window failed, skipping", extra={
+                        "language": language, "window": f"{window.start}..{window.end}",
+                        "error": str(exc)})
             totals[language] = saved
             log.info("language done", extra={"language": language, "saved": saved,
                                              **{f"seen_{k}": v for k, v in skipped.items()}})
