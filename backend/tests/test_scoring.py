@@ -24,6 +24,18 @@ class TestDifficultySignals:
         args = ("Some body text " * 50, ["good first issue"], 3)
         assert extract_signals(*args) == extract_signals(*args)
 
+    def test_counts_inline_code_checklists_and_links(self):
+        body = ("Call `parse()` with `--strict`.\n- [ ] add test\n- [x] repro\n"
+                "* [ ] docs\nSee https://a.dev and http://b.dev")
+        s = extract_signals(body, ["bug", "good first issue"], 0, title="Fix parser")
+        assert s["inline_code"] == 2
+        assert s["checklist_items"] == 3
+        assert s["links"] == 2
+        assert s["title_length"] == len("Fix parser") and s["label_count"] == 2
+
+    def test_body_is_capped_like_the_training_data(self):
+        assert extract_signals("x" * 20_000, [], 0)["body_length"] == 8000
+
 
 class TestDifficultyScore:
     def test_docs_issue_pointing_at_one_file_is_easy(self):

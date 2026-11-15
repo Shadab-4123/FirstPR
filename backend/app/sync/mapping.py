@@ -39,7 +39,7 @@ def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
     labels = [label["name"] for label in item.get("labels", [])]
     assignees = item.get("assignees") or ([item["assignee"]] if item.get("assignee") else [])
 
-    signals = extract_signals(body, labels, item.get("comments", 0))
+    signals = extract_signals(body, labels, item.get("comments", 0), title=item["title"])
     difficulty = score_difficulty(signals)
     availability = check_availability(state=item["state"], assignee_count=len(assignees))
 

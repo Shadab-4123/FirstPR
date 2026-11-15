@@ -22,15 +22,33 @@ _CODE_FENCE = re.compile(r"```")
 # Things that look like a file path: src/utils/date.py, ./lib/foo.ts
 _FILE_PATH = re.compile(r"(?:[\w.-]+/)+[\w.-]+\.\w{1,6}\b")
 
+_INLINE_CODE = re.compile(r"`[^`\n]+`")  # `parse_date()`, `--verbose`
+_CHECKBOX = re.compile(r"^\s*[-*] \[[ xX]\]", re.MULTILINE)  # task-list items
+_LINK = re.compile(r"https?://")
+# Same cap as the training data (app/ml/collect.py), so live and training text match.
+MAX_BODY_CHARS = 8000
+
 EASY_MAX = 0.35
 MEDIUM_MAX = 0.60
 
 
-def extract_signals(body: str | None, labels: list[str], comments_count: int) -> dict[str, int]:
-    body = body or ""
+def extract_signals(
+    body: str | None, labels: list[str], comments_count: int, title: str = ""
+) -> dict[str, int]:
+    """Numbers describing an issue, from what's visible while it is open.
+
+    Used twice, so it must stay deterministic and identical in both places:
+    by the sync on live issues, and by app/ml to build training features.
+    """
+    body = (body or "")[:MAX_BODY_CHARS]
     lowered = [label.lower() for label in labels]
     return {
         "body_length": len(body),
+        "title_length": len(title),
+        "inline_code": len(_INLINE_CODE.findall(body)),
+        "checklist_items": len(_CHECKBOX.findall(body)),
+        "links": len(_LINK.findall(body)),
+        "label_count": len(labels),
         "code_blocks": len(_CODE_FENCE.findall(body)) // 2,
         "file_paths": len(set(_FILE_PATH.findall(body))),
         "comments": comments_count,
