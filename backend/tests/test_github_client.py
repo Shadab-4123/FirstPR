@@ -145,3 +145,16 @@ async def test_refuses_to_wait_longer_than_max():
         with pytest.raises(RateLimitExceeded):
             await gh.get_repo("o/r")
     assert fake.sleeps == []
+
+
+@respx.mock
+async def test_truncated_json_body_is_retried():
+    """Seen in production: a 200 whose JSON was cut off mid-transfer."""
+    fake = FakeTime()
+    route = respx.get(f"{BASE}/repos/a/b").mock(side_effect=[
+        httpx.Response(200, content=b'{"id": 1, "full_na', headers=rl_headers(4999, 0)),
+        httpx.Response(200, json={"id": 1}, headers=rl_headers(4998, 0)),
+    ])
+    async with make_client(fake) as client:
+        resp = await client.get_repo("a/b")
+    assert resp.data == {"id": 1} and route.call_count == 2

@@ -180,7 +180,14 @@ class GitHubClient:
             if resp.status_code == 304:
                 return GitHubResponse(304, None, etag)
             if resp.is_success:
-                return GitHubResponse(resp.status_code, resp.json(), resp.headers.get("ETag"))
+                try:
+                    data = resp.json()
+                except ValueError:
+                    # A 200 whose body was cut off mid-transfer: treat it like a network error.
+                    last_error = GitHubError(resp.status_code, "truncated JSON response")
+                    await self._backoff(attempt, path, reason=last_error.message)
+                    continue
+                return GitHubResponse(resp.status_code, data, resp.headers.get("ETag"))
 
             if self._is_rate_limited(resp):
                 wait = self._rate_limit_wait(resp, resource)

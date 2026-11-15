@@ -168,3 +168,10 @@ async def test_a_failing_window_is_skipped_not_fatal(db_session_factory, nodes):
         saved = await collect(db_session_factory, client, ["python"], per_language=2, months=2,
                               min_stars=0, today=date(2025, 6, 30))
     assert saved == {"python": 1}  # the second window still ran
+
+
+def test_nul_characters_are_stripped_from_training_text(nodes):
+    node = nodes[1]
+    node["body"] = "a\x00b"
+    row, _ = map_training_example(node, min_stars=0)
+    assert row["raw"]["body"] == "ab"

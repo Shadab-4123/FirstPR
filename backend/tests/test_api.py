@@ -69,3 +69,10 @@ def test_missing_issue_is_a_clear_404(client):
     response = client.get("/api/v1/issues/999999")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "not_found"
+
+
+def test_nul_characters_in_github_text_dont_break_storage(client, seed):
+    """Seen in production: an issue body with \\u0000, which Postgres refuses."""
+    issue_id = seed(title="Fix\x00 crash", body="before\x00after")
+    data = client.get(f"/api/v1/issues/{issue_id}").json()
+    assert data["title"] == "Fix crash" and data["body"] == "beforeafter"

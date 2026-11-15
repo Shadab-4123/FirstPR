@@ -10,6 +10,11 @@ from app.scoring.difficulty import extract_signals, score_difficulty
 BODY_EXCERPT_CHARS = 4000
 
 
+def clean_text(value: str | None) -> str:
+    """GitHub text can contain NUL characters; Postgres rejects them in text and JSONB."""
+    return (value or "").replace("\x00", "")
+
+
 def _dt(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
 
@@ -36,7 +41,7 @@ def map_repo(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
-    body = item.get("body") or ""
+    body = clean_text(item.get("body"))
     labels = [label["name"] for label in item.get("labels", [])]
     assignees = item.get("assignees") or ([item["assignee"]] if item.get("assignee") else [])
 
@@ -48,7 +53,7 @@ def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
         "github_id": item["id"],
         "repo_id": repo_id,
         "number": item["number"],
-        "title": item["title"],
+        "title": clean_text(item["title"]),
         "body_excerpt": body[:BODY_EXCERPT_CHARS],
         "html_url": item["html_url"],
         "labels": labels,

@@ -29,6 +29,7 @@ from app.core.logging import configure_logging
 from app.db.models import TrainingExample
 from app.github.client import GitHubClient, GitHubError, RateLimitExceeded
 from app.sync.discover import Window, needs_split
+from app.sync.mapping import clean_text
 
 log = logging.getLogger("firstpr.ml.collect")
 
@@ -93,7 +94,7 @@ def map_training_example(node: dict[str, Any], *, min_stars: int) -> tuple[dict 
     # Leakage guard: only comments that existed before anyone opened the fix.
     pre_pr_comments = [
         {"created_at": c["createdAt"], "author_association": c["authorAssociation"],
-         "body": (c["body"] or "")[:MAX_COMMENT_CHARS]}
+         "body": clean_text(c["body"])[:MAX_COMMENT_CHARS]}
         for c in node["comments"]["nodes"]
         if c and _dt(c["createdAt"]) < pr_created
     ]
@@ -107,8 +108,8 @@ def map_training_example(node: dict[str, Any], *, min_stars: int) -> tuple[dict 
         "issue_created_at": issue_created,
         "issue_closed_at": _dt(node["closedAt"]),
         "raw": {
-            "title": node["title"],
-            "body": (node["body"] or "")[:MAX_BODY_CHARS],
+            "title": clean_text(node["title"]),
+            "body": clean_text(node["body"])[:MAX_BODY_CHARS],
             "labels": [label["name"] for label in node["labels"]["nodes"]],
             "author_association": node["authorAssociation"],
             "comments_pre_pr": pre_pr_comments,
