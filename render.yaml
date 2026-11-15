@@ -25,10 +25,10 @@ services:
     staticPublishPath: dist
     routes:
       # Same origin for the browser: /api/* is forwarded to the API service.
-      # If Render gives the API a different URL than below, update it here.
+      # Render appended "-5lk3" because "firstpr-api" was already taken.
       - type: rewrite
         source: /api/*
-        destination: https://firstpr-api.onrender.com/api/*
+        destination: https://firstpr-api-5lk3.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
