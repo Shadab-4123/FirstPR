@@ -23,7 +23,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 90  # GitHub search allows 30 requests/min, so a full run is slow
+    timeout-minutes: 150  # search allows 30 requests/min; two labels x 10 languages + bug pass
     defaults:
       run:
         working-directory: backend

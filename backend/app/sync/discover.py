@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 SEARCH_RESULT_CAP = 1000
-BASE_QUALIFIERS = 'label:"good first issue" state:open is:issue no:assignee archived:false'
+# Open, unclaimed issues; the label decides which pool (beginner, help wanted, bug).
+OPEN_UNCLAIMED = "state:open is:issue no:assignee archived:false"
+GOOD_FIRST_ISSUE = "good first issue"
+# GitHub rejects search queries longer than 256 characters.
+MAX_QUERY_CHARS = 256
 
 
 @dataclass(frozen=True)
@@ -29,9 +33,31 @@ class Window:
         return Window(self.start, mid), Window(mid + timedelta(days=1), self.end)
 
 
-def build_query(language: str, window: Window) -> str:
+def build_query(language: str, window: Window, label: str = GOOD_FIRST_ISSUE) -> str:
     lang = f'"{language}"' if " " in language else language
-    return f"{BASE_QUALIFIERS} language:{lang} created:{window.start}..{window.end}"
+    return (f'label:"{label}" {OPEN_UNCLAIMED} language:{lang} '
+            f"created:{window.start}..{window.end}")
+
+
+def batch_repo_queries(base: str, repos: list[str]) -> list[str]:
+    """Pack `repo:` qualifiers into as few queries as fit GitHub's 256-char limit.
+
+    Issue search can't filter by repo stars, so "bugs in big repos" means naming
+    the big repos we already know, several per query.
+    """
+    queries: list[str] = []
+    current = base
+    for name in repos:
+        qualifier = f" repo:{name}"
+        if len(base) + len(qualifier) > MAX_QUERY_CHARS:
+            continue  # absurdly long name; can't fit even alone
+        if len(current) + len(qualifier) > MAX_QUERY_CHARS:
+            queries.append(current)
+            current = base
+        current += qualifier
+    if current != base:
+        queries.append(current)
+    return queries
 
 
 def initial_windows(today: date, lookback_days: int, chunk_days: int = 30) -> list[Window]:

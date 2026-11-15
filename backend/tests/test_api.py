@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app.db.session import get_db
 from app.main import app
 from app.sync.mapping import map_issue, map_repo
-from app.sync.upsert import rescore_repo_health, upsert_issue, upsert_repo
+from app.sync.upsert import reclassify_issues, rescore_repo_health, upsert_issue, upsert_repo
 
 
 @pytest.fixture
@@ -32,6 +32,7 @@ def seed(db_session_factory, fixture):
             repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
             issue_id = upsert_issue(db, map_issue(item, repo_id))
             rescore_repo_health(db)
+            reclassify_issues(db)
             db.commit()
         return issue_id
 
@@ -76,3 +77,32 @@ def test_nul_characters_in_github_text_dont_break_storage(client, seed):
     issue_id = seed(title="Fix\x00 crash", body="before\x00after")
     data = client.get(f"/api/v1/issues/{issue_id}").json()
     assert data["title"] == "Fix crash" and data["body"] == "beforeafter"
+
+
+def _labels(*names):
+    return [{"name": n} for n in names]
+
+
+def test_levels_summary_and_level_filter(client, seed):
+    # A short, docs-pointing beginner issue (easy) and a help-wanted feature (not easy).
+    easy = seed(id=1, number=1, labels=_labels("good first issue", "documentation"),
+                title="Fix typo in README", body="See docs/index.md", comments=0)
+    seed(id=2, number=2, labels=_labels("help wanted", "enhancement"),
+         title="Add plugin system", body="We need a plugin API. " * 120, comments=12)
+
+    levels = client.get("/api/v1/meta/levels").json()
+    assert [lv["level"] for lv in levels] == ["new", "some", "experienced"]
+    by_level = {lv["level"]: lv for lv in levels}
+    assert by_level["new"]["total"] == 1
+    assert by_level["new"]["kinds"] == [{"value": "docs", "count": 1}]
+    assert by_level["experienced"]["total"] == 1
+
+    new_items = client.get("/api/v1/issues", params={"level": "new"}).json()["items"]
+    assert [i["id"] for i in new_items] == [easy]
+    assert new_items[0]["level"] == "new" and new_items[0]["kind"] == "docs"
+    feature = client.get("/api/v1/issues", params={"kind": "feature"}).json()["items"]
+    assert len(feature) == 1 and feature[0]["level"] == "experienced"
+
+
+def test_unknown_level_is_rejected(client):
+    assert client.get("/api/v1/issues", params={"level": "wizard"}).status_code == 422

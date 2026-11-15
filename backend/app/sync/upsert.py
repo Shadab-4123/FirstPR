@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.db.models import Issue, Repo
+from app.scoring.classify import contribution_kind, contributor_level
 from app.scoring.health import score_repo_health
 
 
@@ -70,5 +71,28 @@ def rescore_repo_health(db: Session) -> int:
     ]
     if updates:
         db.execute(update(Repo), updates)  # bulk UPDATE ... WHERE id = :id
+    db.commit()
+    return len(updates)
+
+
+def reclassify_issues(db: Session) -> int:
+    """Recompute level and kind for every open issue from stored columns.
+
+    Cheap (no GitHub calls) and run after each sync and re-check, so a change to
+    the rules in app/scoring/classify.py reaches every existing row the next day.
+    """
+    rows = db.execute(
+        select(Issue.id, Issue.labels, Issue.title, Issue.difficulty_label, Repo.stars)
+        .join(Repo, Issue.repo_id == Repo.id)
+        .where(Issue.state == "open")
+    ).all()
+    updates = [
+        {"id": r.id,
+         "level": contributor_level(r.labels, r.difficulty_label, r.stars),
+         "kind": contribution_kind(r.labels, r.title)}
+        for r in rows
+    ]
+    if updates:
+        db.execute(update(Issue), updates)
     db.commit()
     return len(updates)

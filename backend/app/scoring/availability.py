@@ -9,11 +9,11 @@ import re
 from dataclasses import dataclass
 from typing import Any, Literal
 
+from app.scoring.classify import has_tracked_label
+
 UnavailableReason = Literal[
     "closed", "assigned", "linked_pr", "claimed_in_comments", "label_removed"
 ]
-
-BEGINNER_LABEL = "good first issue"
 
 # Phrases people use to claim an issue. Kept deliberately narrow: a false
 # "claimed" hides a good issue, which is worse than showing a taken one.
@@ -66,8 +66,10 @@ def check_availability(
 ) -> Availability:
     if state != "open":
         return Availability(False, "closed")
-    if labels is not None and BEGINNER_LABEL not in (label.lower() for label in labels):
-        return Availability(False, "label_removed")  # maintainer decided it isn't beginner work
+    if labels is not None and not has_tracked_label(labels):
+        # None of good first issue / help wanted / bug left: maintainers no longer
+        # list it as something for outside contributors.
+        return Availability(False, "label_removed")
     if assignee_count > 0:
         return Availability(False, "assigned")
     if has_linked_pr:

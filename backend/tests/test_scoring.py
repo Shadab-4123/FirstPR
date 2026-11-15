@@ -93,8 +93,13 @@ class TestAvailability:
         assert not is_claim_comment(text)
 
     def test_removed_label_makes_issue_unavailable(self):
-        result = check_availability(state="open", assignee_count=0, labels=["bug"])
+        # None of good first issue / help wanted / bug is left.
+        result = check_availability(state="open", assignee_count=0, labels=["enhancement"])
         assert result.reason == "label_removed"
+
+    @pytest.mark.parametrize("label", ["help wanted", "bug", "good first issue"])
+    def test_any_tracked_label_keeps_issue_listed(self, label):
+        assert check_availability(state="open", assignee_count=0, labels=[label]).available
 
     def test_label_match_is_case_insensitive(self):
         assert check_availability(

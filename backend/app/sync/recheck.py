@@ -30,6 +30,7 @@ from app.db.models import Issue, SyncRun
 from app.github.client import GitHubClient, GitHubError
 from app.scoring.availability import check_availability, has_open_linked_pr
 from app.sync.mapping import BODY_EXCERPT_CHARS, map_issue
+from app.sync.upsert import reclassify_issues
 
 log = logging.getLogger("firstpr.recheck")
 
@@ -140,6 +141,7 @@ async def run_recheck(
                 await recheck_issue(db, client, issue, stats, now)
                 if i % COMMIT_EVERY == 0:
                     db.commit()  # a crash loses at most COMMIT_EVERY checks
+            reclassify_issues(db)  # difficulty or labels may have changed
             run.status = "succeeded"
         except Exception as exc:
             db.rollback()

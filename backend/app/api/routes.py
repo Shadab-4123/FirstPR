@@ -18,11 +18,13 @@ from app.schemas.issue import (
     IssueDetail,
     IssueOut,
     IssuePage,
+    LevelSummary,
     RepoSummary,
     ScoreBreakdown,
     Stats,
     SyncRunOut,
 )
+from app.scoring.classify import LEVELS
 from app.scoring.difficulty import score_difficulty
 from app.scoring.health import score_repo_health
 
@@ -54,6 +56,8 @@ def to_issue_out(issue: Issue) -> IssueOut:
         is_available=issue.is_available,
         unavailable_reason=issue.unavailable_reason,
         difficulty_label=issue.difficulty_label,  # type: ignore[arg-type]
+        level=issue.level,  # type: ignore[arg-type]
+        kind=issue.kind,  # type: ignore[arg-type]
         repo=RepoSummary.model_validate(issue.repo),
         score_breakdown=ScoreBreakdown(
             difficulty=DifficultyBreakdown(
@@ -119,6 +123,32 @@ def _cached(key: str, build):
     value = build()
     _cache[key] = (time.monotonic(), value)
     return value
+
+
+@router.get("/meta/levels", response_model=list[LevelSummary])
+def level_summary(db: DB) -> list[LevelSummary]:
+    """Counts for the Explore page: available issues per level, split by type."""
+
+    def build() -> list[LevelSummary]:
+        rows = db.execute(
+            select(Issue.level, Issue.kind, func.count())
+            .where(Issue.state == "open", Issue.is_available.is_(True),
+                   Issue.level.is_not(None), Issue.kind.is_not(None))
+            .group_by(Issue.level, Issue.kind)
+        ).all()
+        summaries = []
+        for level in LEVELS:  # always all three, in order, even if one is empty
+            kinds = sorted(
+                ((k, n) for lv, k, n in rows if lv == level and k is not None),
+                key=lambda kn: -kn[1],
+            )
+            summaries.append(LevelSummary(
+                level=level, total=sum(n for _, n in kinds),
+                kinds=[FacetCount(value=k, count=n) for k, n in kinds],
+            ))
+        return summaries
+
+    return _cached("levels", build)
 
 
 @router.get("/meta/filters", response_model=FilterMeta)

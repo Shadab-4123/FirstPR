@@ -49,6 +49,8 @@ class IssueOut(BaseModel):
     is_available: bool
     unavailable_reason: str | None
     difficulty_label: Literal["easy", "medium", "hard"] | None
+    level: Literal["new", "some", "experienced"] | None
+    kind: Literal["docs", "tests", "translation", "performance", "bug", "feature", "other"] | None
     repo: RepoSummary
     score_breakdown: ScoreBreakdown
 
@@ -80,6 +82,12 @@ class FilterMeta(BaseModel):
     languages: list[FacetCount]
     labels: list[FacetCount]
     difficulties: list[FacetCount]
+
+
+class LevelSummary(BaseModel):
+    level: Literal["new", "some", "experienced"]
+    total: int
+    kinds: list[FacetCount]  # issue count per contribution type, largest first
 
 
 class SyncRunOut(BaseModel):

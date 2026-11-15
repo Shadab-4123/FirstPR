@@ -11,6 +11,8 @@ from app.db.models import Issue, Repo
 
 SortKey = Literal["relevance", "newest", "updated", "stars"]
 Difficulty = Literal["easy", "medium", "hard"]
+Level = Literal["new", "some", "experienced"]
+Kind = Literal["docs", "tests", "translation", "performance", "bug", "feature", "other"]
 
 
 class IssueFilters(BaseModel):
@@ -18,6 +20,8 @@ class IssueFilters(BaseModel):
     labels: list[str] = Field(default_factory=list, max_length=10)
     min_stars: int = Field(0, ge=0)
     difficulty: list[Difficulty] = Field(default_factory=list)
+    level: Level | None = None
+    kind: Kind | None = None
     available_only: bool = True
     updated_within_days: int | None = Field(None, ge=1, le=365)
     q: str | None = Field(None, max_length=200)
@@ -39,6 +43,10 @@ def filtered_issues(f: IssueFilters) -> Select:
         stmt = stmt.where(Repo.stars >= f.min_stars)
     if f.difficulty:
         stmt = stmt.where(Issue.difficulty_label.in_(f.difficulty))
+    if f.level:
+        stmt = stmt.where(Issue.level == f.level)
+    if f.kind:
+        stmt = stmt.where(Issue.kind == f.kind)
     if f.updated_within_days:
         since = datetime.now(UTC) - timedelta(days=f.updated_within_days)
         stmt = stmt.where(Issue.updated_at >= since)

@@ -21,9 +21,24 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.models import Repo, SyncRun
 from app.github.client import GitHubClient, GitHubError
-from app.sync.discover import Window, build_query, initial_windows, needs_split
+from app.scoring.classify import BIG_REPO_STARS, BUG, HELP_WANTED
+from app.sync.discover import (
+    GOOD_FIRST_ISSUE,
+    OPEN_UNCLAIMED,
+    Window,
+    batch_repo_queries,
+    build_query,
+    initial_windows,
+    needs_split,
+)
 from app.sync.mapping import map_issue, map_repo, repo_full_name_from_url
-from app.sync.upsert import rescore_repo_health, touch_repo, upsert_issue, upsert_repo
+from app.sync.upsert import (
+    reclassify_issues,
+    rescore_repo_health,
+    touch_repo,
+    upsert_issue,
+    upsert_repo,
+)
 
 log = logging.getLogger("firstpr.sync")
 
@@ -48,15 +63,15 @@ class SyncStats:
 
 
 async def iter_search_pages(
-    client: GitHubClient, language: str, window: Window
+    client: GitHubClient, language: str, window: Window, label: str = GOOD_FIRST_ISSUE
 ) -> AsyncIterator[list[dict]]:
     """Yield pages of issues for one window, halving the window if it is over the cap."""
-    query = build_query(language, window)
+    query = build_query(language, window, label)
     first = await client.search_issues(query, page=1, per_page=PER_PAGE)
     if needs_split(first["total_count"], window):
         log.info("splitting window", extra={"window": str(window), "total": first["total_count"]})
         for half in window.split():
-            async for page in iter_search_pages(client, language, half):
+            async for page in iter_search_pages(client, language, half, label):
                 yield page
         return
 
@@ -97,31 +112,60 @@ async def resolve_repo(
     return info
 
 
+async def store_item(
+    db: Session, client: GitHubClient, item: dict, *, min_stars: int, stats: SyncStats
+) -> None:
+    """Upsert one search result, after checking its repo is real, active and big enough."""
+    if "pull_request" in item:
+        return
+    repo = await resolve_repo(db, client, repo_full_name_from_url(item["repository_url"]), stats)
+    if repo is None or repo.archived:
+        return
+    if repo.stars < min_stars:
+        stats.skipped_low_stars += 1
+        return
+    upsert_issue(db, map_issue(item, repo.id))
+    stats.issues_upserted += 1
+
+
 async def sync_language(
     db: Session, client: GitHubClient, language: str, *, limit: int, lookback_days: int,
-    min_stars: int, stats: SyncStats, today: date | None = None,
+    min_stars: int, stats: SyncStats, today: date | None = None, label: str = GOOD_FIRST_ISSUE,
 ) -> None:
     today = today or datetime.now(UTC).date()
+    seen_here = 0  # `limit` is per (language, label), not shared across labels
     for window in initial_windows(today, lookback_days):
-        async for items in iter_search_pages(client, language, window):
+        async for items in iter_search_pages(client, language, window, label):
             for item in items:
-                if stats.issues_seen >= limit:
+                if seen_here >= limit:
                     db.commit()
                     return
+                seen_here += 1
                 stats.issues_seen += 1
-                if "pull_request" in item:
-                    continue
-                repo = await resolve_repo(
-                    db, client, repo_full_name_from_url(item["repository_url"]), stats
-                )
-                if repo is None or repo.archived:
-                    continue
-                if repo.stars < min_stars:
-                    stats.skipped_low_stars += 1
-                    continue
-                upsert_issue(db, map_issue(item, repo.id))
-                stats.issues_upserted += 1
+                await store_item(db, client, item, min_stars=min_stars, stats=stats)
             db.commit()  # one page = one transaction; a crash loses at most a page
+
+
+async def sync_big_repo_bugs(
+    db: Session, client: GitHubClient, stats: SyncStats, *, min_stars: int = BIG_REPO_STARS,
+) -> None:
+    """Unassigned bugs in the big repos we already index: the "experienced" pool.
+
+    Search can't filter by stars, so we name the repos (several per query) and take
+    the 100 most recently updated bugs per query. One page each keeps this cheap.
+    """
+    names = db.execute(
+        select(Repo.full_name)
+        .where(Repo.stars >= min_stars, Repo.archived.is_(False))
+        .order_by(Repo.stars.desc())
+    ).scalars().all()
+    base = f'label:"{BUG}" {OPEN_UNCLAIMED}'
+    for query in batch_repo_queries(base, list(names)):
+        data = await client.search_issues(query, page=1, per_page=PER_PAGE)
+        for item in data["items"]:
+            stats.issues_seen += 1
+            await store_item(db, client, item, min_stars=min_stars, stats=stats)
+        db.commit()
 
 
 ABANDONED_AFTER = timedelta(hours=3)
@@ -143,28 +187,29 @@ def mark_abandoned_runs(db: Session) -> int:
 async def run_sync(
     session_factory: sessionmaker[Session], client: GitHubClient, languages: list[str], *,
     limit: int, lookback_days: int, min_stars: int,
+    labels: tuple[str, ...] = (GOOD_FIRST_ISSUE, HELP_WANTED), big_repo_bugs: bool = True,
 ) -> SyncRun:
     with session_factory() as db:
         if abandoned := mark_abandoned_runs(db):
             log.warning("marked abandoned runs as failed", extra={"count": abandoned})
-        run = SyncRun(query=f"languages={','.join(languages)} limit={limit} min_stars={min_stars}")
+        run = SyncRun(query=f"languages={','.join(languages)} labels={','.join(labels)} "
+                            f"big_repo_bugs={big_repo_bugs} limit={limit} min_stars={min_stars}")
         db.add(run)
         db.commit()
 
         stats = SyncStats()
         try:
             for language in languages:
-                lang_stats = SyncStats(repo_cache=stats.repo_cache)
-                await sync_language(
-                    db, client, language, limit=limit, lookback_days=lookback_days,
-                    min_stars=min_stars, stats=lang_stats,
-                )
-                stats.issues_seen += lang_stats.issues_seen
-                stats.issues_upserted += lang_stats.issues_upserted
-                stats.repos_upserted += lang_stats.repos_upserted
-                stats.skipped_low_stars += lang_stats.skipped_low_stars
+                for label in labels:
+                    await sync_language(
+                        db, client, language, limit=limit, lookback_days=lookback_days,
+                        min_stars=min_stars, stats=stats, label=label,
+                    )
+            if big_repo_bugs:
+                await sync_big_repo_bugs(db, client, stats)
             rescored = rescore_repo_health(db)
-            log.info("repo health rescored", extra={"repos": rescored})
+            reclassified = reclassify_issues(db)  # after health: level reads repo stars
+            log.info("rescored", extra={"repos": rescored, "issues": reclassified})
             run.status = "succeeded"
         except Exception as exc:  # record the failure, then re-raise for the exit code
             db.rollback()
@@ -194,10 +239,13 @@ async def run_sync(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Sync good-first-issues from GitHub")
+    parser = argparse.ArgumentParser(description="Sync open, unclaimed issues from GitHub")
     parser.add_argument("--language", action="append", dest="languages",
                         help="repeatable; default: python")
-    parser.add_argument("--limit", type=int, default=200, help="max issues to look at per language")
+    parser.add_argument("--limit", type=int, default=200,
+                        help="max issues to look at per language, per label")
+    parser.add_argument("--beginner-only", action="store_true",
+                        help='only "good first issue": skip "help wanted" and big-repo bugs')
     parser.add_argument("--lookback-days", type=int, default=180)
     parser.add_argument("--min-stars", type=int, default=10,
                         help="skip repos below this many stars (filters spam/toy repos)")
@@ -211,6 +259,8 @@ def main() -> None:
 
     from app.db.session import SessionLocal
 
+    labels = (GOOD_FIRST_ISSUE,) if args.beginner_only else (GOOD_FIRST_ISSUE, HELP_WANTED)
+
     async def _run() -> None:
         async with GitHubClient(
             settings.github_token, max_retries=settings.github_max_retries,
@@ -219,6 +269,8 @@ def main() -> None:
             await run_sync(
                 SessionLocal, client, args.languages or ["python"], limit=args.limit,
                 lookback_days=args.lookback_days, min_stars=args.min_stars,
+                labels=labels,
+                big_repo_bugs=not args.beginner_only,
             )
 
     asyncio.run(_run())

@@ -99,6 +99,11 @@ class Issue(Base):
     difficulty_label: Mapped[str | None] = mapped_column(String(10))
     est_hours: Mapped[float | None] = mapped_column(Float)
 
+    # Who it suits and what kind of work it is (app/scoring/classify.py). Recomputed
+    # for every issue after each sync, so a rule change applies to old rows too.
+    level: Mapped[str | None] = mapped_column(String(12))  # new / some / experienced
+    kind: Mapped[str | None] = mapped_column(String(12))  # docs / tests / bug / ...
+
     # Sync bookkeeping
     etag: Mapped[str | None] = mapped_column(String(200))
     last_seen_at: Mapped[datetime] = mapped_column(
@@ -126,6 +131,10 @@ class Issue(Base):
         # Partial: only open issues are ever listed, so closed ones stay out of the index.
         Index("ix_issues_open_updated", updated_at.desc(), postgresql_where=text("state = 'open'")),
         Index("ix_issues_open_created", created_at.desc(), postgresql_where=text("state = 'open'")),
+        # The Explore page counts and lists open issues by level, then type.
+        Index(
+            "ix_issues_open_level_kind", "level", "kind", postgresql_where=text("state = 'open'")
+        ),
     )
 
 
