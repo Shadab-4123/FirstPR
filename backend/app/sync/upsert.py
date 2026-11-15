@@ -3,11 +3,12 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.db.models import Issue, Repo
+from app.scoring.health import score_repo_health
 
 
 def upsert_repo(db: Session, row: dict[str, Any], etag: str | None) -> int:
@@ -43,3 +44,31 @@ def upsert_issue(db: Session, row: dict[str, Any]) -> int:
         },
     ).returning(Issue.id)
     return db.execute(stmt).scalar_one()
+
+
+def rescore_repo_health(db: Session) -> int:
+    """Recompute every repo's health score from stored columns. No GitHub calls.
+
+    Run after each sync rather than at fetch time: "last push 20 days ago" becomes
+    "50 days ago" even when the repo itself is unchanged (a 304).
+    """
+    now = datetime.now(UTC)
+    rows = db.execute(
+        select(Repo.id, Repo.archived, Repo.pushed_at, Repo.stars, Repo.forks,
+               Repo.has_contributing)
+    ).all()
+    updates = [
+        {
+            "id": r.id,
+            "health_score": score_repo_health(
+                archived=r.archived, pushed_at=r.pushed_at, stars=r.stars, forks=r.forks,
+                has_contributing=r.has_contributing, now=now,
+            ).score,
+            "health_updated_at": now,
+        }
+        for r in rows
+    ]
+    if updates:
+        db.execute(update(Repo), updates)  # bulk UPDATE ... WHERE id = :id
+    db.commit()
+    return len(updates)

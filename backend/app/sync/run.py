@@ -23,7 +23,7 @@ from app.db.models import Repo, SyncRun
 from app.github.client import GitHubClient, GitHubError
 from app.sync.discover import Window, build_query, initial_windows, needs_split
 from app.sync.mapping import map_issue, map_repo, repo_full_name_from_url
-from app.sync.upsert import touch_repo, upsert_issue, upsert_repo
+from app.sync.upsert import rescore_repo_health, touch_repo, upsert_issue, upsert_repo
 
 log = logging.getLogger("firstpr.sync")
 
@@ -163,6 +163,8 @@ async def run_sync(
                 stats.issues_upserted += lang_stats.issues_upserted
                 stats.repos_upserted += lang_stats.repos_upserted
                 stats.skipped_low_stars += lang_stats.skipped_low_stars
+            rescored = rescore_repo_health(db)
+            log.info("repo health rescored", extra={"repos": rescored})
             run.status = "succeeded"
         except Exception as exc:  # record the failure, then re-raise for the exit code
             db.rollback()

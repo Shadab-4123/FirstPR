@@ -60,7 +60,9 @@ def issue_search(f: IssueFilters) -> Select:
         stmt = stmt.order_by(desc(Issue.created_at))
     elif f.sort == "stars":
         stmt = stmt.order_by(desc(Repo.stars))
-    else:  # "updated", or "relevance" without a text query
+    elif f.sort == "relevance":  # no text query: healthiest repos first
+        stmt = stmt.order_by(Repo.health_score.desc().nulls_last(), desc(Issue.updated_at))
+    else:  # "updated"
         stmt = stmt.order_by(desc(Issue.updated_at))
     return (
         stmt.order_by(desc(Issue.id))  # stable tiebreak so pages never overlap

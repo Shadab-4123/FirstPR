@@ -450,6 +450,40 @@
         ],
         "title": "FilterMeta"
       },
+      "HealthBreakdown": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "method": {
+            "type": "string",
+            "const": "baseline_heuristic",
+            "title": "Method",
+            "default": "baseline_heuristic"
+          }
+        },
+        "type": "object",
+        "required": [
+          "score",
+          "reasons"
+        ],
+        "title": "HealthBreakdown"
+      },
       "IssueOut": {
         "properties": {
           "id": {
@@ -670,11 +704,15 @@
         "properties": {
           "difficulty": {
             "$ref": "#/components/schemas/DifficultyBreakdown"
+          },
+          "health": {
+            "$ref": "#/components/schemas/HealthBreakdown"
           }
         },
         "type": "object",
         "required": [
-          "difficulty"
+          "difficulty",
+          "health"
         ],
         "title": "ScoreBreakdown"
       },

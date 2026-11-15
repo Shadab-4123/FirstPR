@@ -135,6 +135,19 @@ export interface components {
             /** Difficulties */
             difficulties: components["schemas"]["FacetCount"][];
         };
+        /** HealthBreakdown */
+        HealthBreakdown: {
+            /** Score */
+            score: number | null;
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Method
+             * @default baseline_heuristic
+             * @constant
+             */
+            method: "baseline_heuristic";
+        };
         /** IssueOut */
         IssueOut: {
             /** Id */
@@ -205,6 +218,7 @@ export interface components {
         /** ScoreBreakdown */
         ScoreBreakdown: {
             difficulty: components["schemas"]["DifficultyBreakdown"];
+            health: components["schemas"]["HealthBreakdown"];
         };
         /** Stats */
         Stats: {

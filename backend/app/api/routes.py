@@ -1,4 +1,5 @@
 import time
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,6 +14,7 @@ from app.schemas.issue import (
     ErrorResponse,
     FacetCount,
     FilterMeta,
+    HealthBreakdown,
     IssueOut,
     IssuePage,
     RepoSummary,
@@ -21,6 +23,7 @@ from app.schemas.issue import (
     SyncRunOut,
 )
 from app.scoring.difficulty import score_difficulty
+from app.scoring.health import score_repo_health
 
 router = APIRouter(prefix="/api/v1", responses={422: {"model": ErrorResponse}})
 DB = Annotated[Session, Depends(get_db)]
@@ -28,6 +31,12 @@ DB = Annotated[Session, Depends(get_db)]
 
 def to_issue_out(issue: Issue) -> IssueOut:
     reasons = score_difficulty(issue.difficulty_signals).reasons if issue.difficulty_signals else []
+    repo = issue.repo
+    # Recomputed here only for its reasons; the stored score is what ranking uses.
+    health = score_repo_health(
+        archived=repo.archived, pushed_at=repo.pushed_at, stars=repo.stars, forks=repo.forks,
+        has_contributing=repo.has_contributing, now=repo.health_updated_at or datetime.now(UTC),
+    )
     return IssueOut(
         id=issue.id,
         number=issue.number,
@@ -47,7 +56,11 @@ def to_issue_out(issue: Issue) -> IssueOut:
                 label=issue.difficulty_label,  # type: ignore[arg-type]
                 score=issue.difficulty_score,
                 reasons=reasons,
-            )
+            ),
+            health=HealthBreakdown(
+                score=repo.health_score,
+                reasons=health.reasons if repo.health_score is not None else [],
+            ),
         ),
     )
 

@@ -6,6 +6,7 @@ const MAX_LABELS = 4
 
 export const IssueRow = ({ issue }: { issue: Issue }) => {
   const { repo } = issue
+  const { health } = issue.score_breakdown
   const extraLabels = issue.labels.length - MAX_LABELS
 
   return (
@@ -17,6 +18,11 @@ export const IssueRow = ({ issue }: { issue: Issue }) => {
           </a>
           <span className="ml-2">{compactNumber(repo.stars)} stars</span>
           {repo.language && <span className="ml-2">{repo.language}</span>}
+          {health.score !== null && (
+            <span className="ml-2" title={`Repo health, from: ${health.reasons.join('; ')}`}>
+              Health {health.score}/100
+            </span>
+          )}
         </p>
 
         <h2 className="font-display text-xl leading-snug font-medium text-pretty">

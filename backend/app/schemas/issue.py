@@ -25,8 +25,15 @@ class DifficultyBreakdown(BaseModel):
     method: Literal["baseline_heuristic"] = "baseline_heuristic"
 
 
+class HealthBreakdown(BaseModel):
+    score: int | None
+    reasons: list[str]
+    method: Literal["baseline_heuristic"] = "baseline_heuristic"
+
+
 class ScoreBreakdown(BaseModel):
     difficulty: DifficultyBreakdown
+    health: HealthBreakdown
 
 
 class IssueOut(BaseModel):
