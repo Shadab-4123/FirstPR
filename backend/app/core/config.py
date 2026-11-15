@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
 
+    # GitHub login (OAuth App). Callback URL to register on GitHub:
+    #   {app_url}/api/v1/auth/github/callback
+    github_client_id: str | None = None
+    github_client_secret: str | None = None
+    # Fernet key that encrypts stored GitHub tokens. Generate one with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    token_encryption_key: str | None = None
+    # The site's public origin (the frontend, which proxies /api to us).
+    app_url: str = "http://localhost:5173"
+
     # Difficulty model file; empty = ml/difficulty_model.joblib in the repo checkout.
     difficulty_model_path: str = ""
 

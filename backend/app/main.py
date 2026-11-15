@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_error_handlers
 from app.api.routes import router
+from app.auth.routes import router as auth_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
@@ -19,12 +20,13 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,  # only our frontend, never "*"
-        allow_methods=["GET", "PUT"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["Content-Type"],
         allow_credentials=True,
     )
     register_error_handlers(app)
     app.include_router(router)
+    app.include_router(auth_router)
     return app
 
 

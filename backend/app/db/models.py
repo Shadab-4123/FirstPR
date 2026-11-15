@@ -192,3 +192,33 @@ class TrainingExample(Base):
 
     # The time-based train/test split sorts on this.
     __table_args__ = (Index("ix_training_examples_closed_at", "issue_closed_at"),)
+
+
+class User(Base):
+    """Someone who signed in with GitHub. Only public profile data, plus their token."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    github_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    login: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str | None] = mapped_column(String(200))
+    avatar_url: Mapped[str | None] = mapped_column(String(400))
+    # Fernet-encrypted (app/auth/crypto.py); never stored or logged in plain text.
+    access_token_encrypted: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_login_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class UserSession(Base):
+    """A signed-in browser. The cookie holds a random token; we store only its SHA-256,
+    so a leaked row can't be replayed, and deleting the row logs that browser out."""
+
+    __tablename__ = "user_sessions"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
