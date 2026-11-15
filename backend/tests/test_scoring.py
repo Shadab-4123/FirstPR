@@ -1,6 +1,6 @@
 import pytest
 
-from app.scoring.availability import check_availability, is_claim_comment
+from app.scoring.availability import check_availability, has_open_linked_pr, is_claim_comment
 from app.scoring.difficulty import extract_signals, score_difficulty
 
 
@@ -79,3 +79,34 @@ class TestAvailability:
     )
     def test_non_claims_are_not_flagged(self, text):
         assert not is_claim_comment(text)
+
+    def test_removed_label_makes_issue_unavailable(self):
+        result = check_availability(state="open", assignee_count=0, labels=["bug"])
+        assert result.reason == "label_removed"
+
+    def test_label_match_is_case_insensitive(self):
+        assert check_availability(
+            state="open", assignee_count=0, labels=["Good First Issue"]
+        ).available
+
+
+def _xref(state: str, is_pr: bool = True) -> dict:
+    issue = {"state": state, **({"pull_request": {"url": "..."}} if is_pr else {})}
+    return {"event": "cross-referenced", "source": {"type": "issue", "issue": issue}}
+
+
+class TestLinkedPr:
+    def test_open_pr_reference_counts(self):
+        assert has_open_linked_pr([{"event": "labeled"}, _xref("open")])
+
+    @pytest.mark.parametrize(
+        "events",
+        [
+            [],
+            [_xref("closed")],  # abandoned or merged PR: issue is free again (or closed anyway)
+            [_xref("open", is_pr=False)],  # another *issue* mentioned it, not a PR
+            [{"event": "commented"}],
+        ],
+    )
+    def test_other_events_do_not_count(self, events):
+        assert not has_open_linked_pr(events)

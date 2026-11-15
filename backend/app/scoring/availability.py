@@ -7,9 +7,13 @@ the UI can say *why* something was hidden.
 
 import re
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
-UnavailableReason = Literal["closed", "assigned", "linked_pr", "claimed_in_comments"]
+UnavailableReason = Literal[
+    "closed", "assigned", "linked_pr", "claimed_in_comments", "label_removed"
+]
+
+BEGINNER_LABEL = "good first issue"
 
 # Phrases people use to claim an issue. Kept deliberately narrow: a false
 # "claimed" hides a good issue, which is worse than showing a taken one.
@@ -36,15 +40,34 @@ def is_claim_comment(text: str) -> bool:
     return bool(CLAIM_PATTERNS.search(text))
 
 
+def has_open_linked_pr(timeline: list[dict[str, Any]]) -> bool:
+    """True if an *open* pull request references this issue.
+
+    GitHub records "PR #12 mentions this issue" as a `cross-referenced` timeline
+    event whose source is the PR. Merged or closed PRs don't count: a closed,
+    abandoned PR leaves the issue free for someone else.
+    """
+    for event in timeline:
+        if event.get("event") != "cross-referenced":
+            continue
+        source = (event.get("source") or {}).get("issue") or {}
+        if "pull_request" in source and source.get("state") == "open":
+            return True
+    return False
+
+
 def check_availability(
     *,
     state: str,
     assignee_count: int,
     has_linked_pr: bool = False,
     recent_comments: list[str] | None = None,
+    labels: list[str] | None = None,
 ) -> Availability:
     if state != "open":
         return Availability(False, "closed")
+    if labels is not None and BEGINNER_LABEL not in (label.lower() for label in labels):
+        return Availability(False, "label_removed")  # maintainer decided it isn't beginner work
     if assignee_count > 0:
         return Availability(False, "assigned")
     if has_linked_pr:

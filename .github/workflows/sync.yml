@@ -47,3 +47,7 @@ jobs:
           --language go --language rust --language java --language "c++"
           --language "c#" --language ruby --language php
           --limit ${{ inputs.limit || '300' }}
+      # Runs even if the sync failed: hiding closed/taken issues matters more than adding new ones.
+      - name: Re-check stored issues (closed, assigned, claimed, linked PR)
+        if: ${{ !cancelled() }}
+        run: python -m app.sync.recheck --max 2000

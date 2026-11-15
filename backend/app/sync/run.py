@@ -12,9 +12,9 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import CursorResult, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
@@ -124,11 +124,29 @@ async def sync_language(
             db.commit()  # one page = one transaction; a crash loses at most a page
 
 
+ABANDONED_AFTER = timedelta(hours=3)
+
+
+def mark_abandoned_runs(db: Session) -> int:
+    """A run killed mid-way (Ctrl+C, machine off, CI timeout) never records its end.
+    Without this it would stay "running" forever and confuse /stats."""
+    result: CursorResult = db.execute(  # type: ignore[assignment]
+        update(SyncRun)
+        .where(SyncRun.status == "running",
+               SyncRun.started_at < datetime.now(UTC) - ABANDONED_AFTER)
+        .values(status="failed", error="abandoned: process stopped before finishing")
+    )
+    db.commit()
+    return result.rowcount
+
+
 async def run_sync(
     session_factory: sessionmaker[Session], client: GitHubClient, languages: list[str], *,
     limit: int, lookback_days: int, min_stars: int,
 ) -> SyncRun:
     with session_factory() as db:
+        if abandoned := mark_abandoned_runs(db):
+            log.warning("marked abandoned runs as failed", extra={"count": abandoned})
         run = SyncRun(query=f"languages={','.join(languages)} limit={limit} min_stars={min_stars}")
         db.add(run)
         db.commit()

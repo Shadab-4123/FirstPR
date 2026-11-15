@@ -109,6 +109,26 @@ class GitHubClient:
     async def get_repo(self, full_name: str, *, etag: str | None = None) -> GitHubResponse:
         return await self.request("GET", f"/repos/{full_name}", etag=etag)
 
+    async def get_issue(
+        self, full_name: str, number: int, *, etag: str | None = None
+    ) -> GitHubResponse:
+        return await self.request("GET", f"/repos/{full_name}/issues/{number}", etag=etag)
+
+    async def get_issue_comments(self, full_name: str, number: int, *, since: str) -> Any:
+        """Comments created or edited after `since` (ISO 8601), oldest first, max 100."""
+        resp = await self.request(
+            "GET", f"/repos/{full_name}/issues/{number}/comments",
+            params={"since": since, "per_page": 100},
+        )
+        return resp.data
+
+    async def get_issue_timeline(self, full_name: str, number: int) -> Any:
+        """First 100 timeline events: enough for a beginner issue's cross-references."""
+        resp = await self.request(
+            "GET", f"/repos/{full_name}/issues/{number}/timeline", params={"per_page": 100}
+        )
+        return resp.data
+
     # ---- core request loop -----------------------------------------------
 
     async def request(

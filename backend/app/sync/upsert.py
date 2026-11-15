@@ -25,12 +25,21 @@ def touch_repo(db: Session, repo_id: int) -> None:
     db.execute(update(Repo).where(Repo.id == repo_id).values(fetched_at=datetime.now(UTC)))
 
 
+# Owned by the re-check job (app/sync/recheck.py), which has the full picture:
+# comments, linked PRs, labels. Search results only ever say "open and unassigned",
+# so letting the sync overwrite these would wipe out a detected claim or linked PR.
+RECHECK_OWNED = {"is_available", "unavailable_reason", "has_linked_pr"}
+
+
 def upsert_issue(db: Session, row: dict[str, Any]) -> int:
-    now = datetime.now(UTC)
-    values = {**row, "last_seen_at": now, "last_checked_at": now}
+    values = {**row, "last_seen_at": datetime.now(UTC)}
     insert_stmt = insert(Issue).values(**values)
     stmt = insert_stmt.on_conflict_do_update(
         index_elements=[Issue.github_id],
-        set_={k: insert_stmt.excluded[k] for k in values if k != "github_id"},
+        set_={
+            k: insert_stmt.excluded[k]
+            for k in values
+            if k != "github_id" and k not in RECHECK_OWNED
+        },
     ).returning(Issue.id)
     return db.execute(stmt).scalar_one()

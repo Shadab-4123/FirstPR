@@ -1,0 +1,133 @@
+"""Re-check job against the real test schema, with GitHub mocked by respx."""
+
+import copy
+
+import pytest
+import respx
+from sqlalchemy import select
+
+from app.db.models import Issue, SyncRun
+from app.github.client import GitHubClient
+from app.sync.mapping import map_issue, map_repo
+from app.sync.recheck import run_recheck
+from app.sync.upsert import upsert_issue, upsert_repo
+
+BASE = "https://api.github.com"
+REPO = "andrewsiah/agentswarm-data-tasks"
+
+
+async def _no_sleep(_: float) -> None:
+    return None
+
+
+@pytest.fixture
+def seeded(db_session_factory, fixture):
+    """One repo and one open, available issue, as the sync would have stored them."""
+    item = copy.deepcopy(fixture("search_issues_python.json")["items"][0])
+    with db_session_factory() as db:
+        repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
+        issue_id = upsert_issue(db, map_issue(item, repo_id))
+        db.commit()
+    url = f"{BASE}/repos/{REPO}/issues/{item['number']}"
+    return db_session_factory, item, issue_id, url
+
+
+async def _recheck(factory) -> SyncRun:
+    async with GitHubClient("t", sleep=_no_sleep, rand=lambda: 0.0) as client:
+        return await run_recheck(factory, client, max_issues=100)
+
+
+def _issue(factory, issue_id: int) -> Issue:
+    with factory() as db:
+        return db.execute(select(Issue).where(Issue.id == issue_id)).scalar_one()
+
+
+def _mock_extras(url: str, *, timeline=None, comments=None) -> None:
+    respx.get(f"{url}/timeline").respond(200, json=timeline or [])
+    respx.get(f"{url}/comments").respond(200, json=comments or [])
+
+
+@respx.mock
+async def test_closed_issue_is_marked_closed(seeded):
+    factory, item, issue_id, url = seeded
+    respx.get(url).respond(200, json={**item, "state": "closed",
+                                      "closed_at": "2026-11-14T10:00:00Z"})
+    run = await _recheck(factory)
+
+    issue = _issue(factory, issue_id)
+    assert run.status == "succeeded"
+    assert issue.state == "closed" and not issue.is_available
+    assert issue.unavailable_reason == "closed"
+    assert issue.last_checked_at is not None
+
+
+@respx.mock
+async def test_assigned_issue_is_hidden_without_extra_calls(seeded):
+    factory, item, issue_id, url = seeded
+    respx.get(url).respond(200, json={**item, "assignees": [{"login": "someone"}]})
+    timeline = respx.get(f"{url}/timeline")
+    await _recheck(factory)
+
+    assert _issue(factory, issue_id).unavailable_reason == "assigned"
+    assert not timeline.called  # already unavailable, so no point spending requests
+
+
+@respx.mock
+async def test_claim_comment_and_linked_pr_are_detected(seeded):
+    factory, item, issue_id, url = seeded
+    respx.get(url).respond(200, json={**item, "comments": 1})
+    _mock_extras(url, comments=[{"body": "Hi! I'd like to work on this."}])
+    await _recheck(factory)
+    assert _issue(factory, issue_id).unavailable_reason == "claimed_in_comments"
+
+
+@respx.mock
+async def test_open_pr_reference_hides_issue(seeded):
+    factory, item, issue_id, url = seeded
+    respx.get(url).respond(200, json={**item, "comments": 0})
+    pr = {"event": "cross-referenced",
+          "source": {"issue": {"state": "open", "pull_request": {"url": "x"}}}}
+    _mock_extras(url, timeline=[pr])
+    await _recheck(factory)
+
+    issue = _issue(factory, issue_id)
+    assert issue.unavailable_reason == "linked_pr" and issue.has_linked_pr
+
+
+@respx.mock
+async def test_unchanged_issue_uses_etag_and_keeps_state(seeded):
+    factory, item, issue_id, url = seeded
+    first = respx.get(url).respond(200, json={**item, "comments": 0}, headers={"ETag": 'W/"v1"'})
+    _mock_extras(url)
+    await _recheck(factory)
+
+    first.respond(304)
+    await _recheck(factory)
+
+    assert first.calls.last.request.headers["If-None-Match"] == 'W/"v1"'
+    issue = _issue(factory, issue_id)
+    assert issue.is_available and issue.etag == 'W/"v1"'
+
+
+@respx.mock
+async def test_deleted_issue_is_marked_gone(seeded):
+    factory, _, issue_id, url = seeded
+    respx.get(url).respond(404, json={"message": "Not Found"})
+    await _recheck(factory)
+
+    issue = _issue(factory, issue_id)
+    assert issue.state == "gone" and not issue.is_available
+
+
+@respx.mock
+async def test_sync_does_not_overwrite_a_detected_claim(seeded, fixture):
+    factory, item, issue_id, url = seeded
+    respx.get(url).respond(200, json={**item, "comments": 1})
+    _mock_extras(url, comments=[{"body": "I'll take this"}])
+    await _recheck(factory)
+
+    # Next day the search still returns it (open + unassigned) and the sync re-upserts it.
+    with factory() as db:
+        upsert_issue(db, map_issue(item, _issue(factory, issue_id).repo_id))
+        db.commit()
+    assert _issue(factory, issue_id).unavailable_reason == "claimed_in_comments"
