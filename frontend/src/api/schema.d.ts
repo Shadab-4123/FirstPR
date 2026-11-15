@@ -38,6 +38,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meta/levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Level Summary
+         * @description Counts for the Explore page: available issues per level, split by type.
+         */
+        get: operations["level_summary_api_v1_meta_levels_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meta/filters": {
         parameters: {
             query?: never;
@@ -183,6 +203,10 @@ export interface components {
             unavailable_reason: string | null;
             /** Difficulty Label */
             difficulty_label: ("easy" | "medium" | "hard") | null;
+            /** Level */
+            level: ("new" | "some" | "experienced") | null;
+            /** Kind */
+            kind: ("docs" | "tests" | "translation" | "performance" | "bug" | "feature" | "other") | null;
             repo: components["schemas"]["RepoSummary"];
             score_breakdown: components["schemas"]["ScoreBreakdown"];
             /** Body */
@@ -230,6 +254,10 @@ export interface components {
             unavailable_reason: string | null;
             /** Difficulty Label */
             difficulty_label: ("easy" | "medium" | "hard") | null;
+            /** Level */
+            level: ("new" | "some" | "experienced") | null;
+            /** Kind */
+            kind: ("docs" | "tests" | "translation" | "performance" | "bug" | "feature" | "other") | null;
             repo: components["schemas"]["RepoSummary"];
             score_breakdown: components["schemas"]["ScoreBreakdown"];
         };
@@ -243,6 +271,18 @@ export interface components {
             page_size: number;
             /** Total */
             total: number;
+        };
+        /** LevelSummary */
+        LevelSummary: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "new" | "some" | "experienced";
+            /** Total */
+            total: number;
+            /** Kinds */
+            kinds: components["schemas"]["FacetCount"][];
         };
         /** RepoSummary */
         RepoSummary: {
@@ -310,6 +350,8 @@ export interface operations {
                 labels?: string[];
                 min_stars?: number;
                 difficulty?: ("easy" | "medium" | "hard")[];
+                level?: ("new" | "some" | "experienced") | null;
+                kind?: ("docs" | "tests" | "translation" | "performance" | "bug" | "feature" | "other") | null;
                 available_only?: boolean;
                 updated_within_days?: number | null;
                 q?: string | null;
@@ -370,6 +412,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    level_summary_api_v1_meta_levels_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LevelSummary"][];
                 };
             };
             /** @description Unprocessable Entity */

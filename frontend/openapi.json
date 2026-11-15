@@ -70,6 +70,52 @@
             }
           },
           {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "new",
+                    "some",
+                    "experienced"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "docs",
+                    "tests",
+                    "translation",
+                    "performance",
+                    "bug",
+                    "feature",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
             "name": "available_only",
             "in": "query",
             "required": false,
@@ -224,6 +270,39 @@
               }
             },
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/v1/meta/levels": {
+      "get": {
+        "summary": "Level Summary",
+        "description": "Counts for the Explore page: available issues per level, split by type.",
+        "operationId": "level_summary_api_v1_meta_levels_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LevelSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Level Summary Api V1 Meta Levels Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -558,6 +637,42 @@
             ],
             "title": "Difficulty Label"
           },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "some",
+                  "experienced"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "docs",
+                  "tests",
+                  "translation",
+                  "performance",
+                  "bug",
+                  "feature",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
           "repo": {
             "$ref": "#/components/schemas/RepoSummary"
           },
@@ -618,6 +733,8 @@
           "is_available",
           "unavailable_reason",
           "difficulty_label",
+          "level",
+          "kind",
           "repo",
           "score_breakdown",
           "body",
@@ -704,6 +821,42 @@
             ],
             "title": "Difficulty Label"
           },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "some",
+                  "experienced"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "docs",
+                  "tests",
+                  "translation",
+                  "performance",
+                  "bug",
+                  "feature",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
           "repo": {
             "$ref": "#/components/schemas/RepoSummary"
           },
@@ -725,6 +878,8 @@
           "is_available",
           "unavailable_reason",
           "difficulty_label",
+          "level",
+          "kind",
           "repo",
           "score_breakdown"
         ],
@@ -760,6 +915,37 @@
           "total"
         ],
         "title": "IssuePage"
+      },
+      "LevelSummary": {
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "new",
+              "some",
+              "experienced"
+            ],
+            "title": "Level"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/FacetCount"
+            },
+            "type": "array",
+            "title": "Kinds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "level",
+          "total",
+          "kinds"
+        ],
+        "title": "LevelSummary"
       },
       "RepoSummary": {
         "properties": {

@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 
 import { ApiError, api, type IssueDetail } from '../api/client'
 import { DifficultyMeter } from '../components/DifficultyMeter'
+import { SiteHeader } from '../components/SiteHeader'
 import { UNAVAILABLE_REASONS, authorRole, compactNumber, formatDate, pluralComments, timeAgo } from '../lib/format'
 
 /** A one-page brief on an issue, so you can decide before diving into GitHub. */
@@ -20,21 +21,19 @@ export const IssuePage = () => {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-8">
-      <header className="flex items-baseline justify-between gap-6 py-6">
-        <Link to="/" className="font-display text-xl font-bold tracking-tight">
-          FirstPR
-        </Link>
-        <BackLink />
-      </header>
+      <SiteHeader />
 
-      <main className="pt-6 sm:pt-10">
-        {issue.isPending ? (
-          <IssueSkeleton />
-        ) : issue.isError ? (
-          <IssueError error={issue.error} onRetry={() => issue.refetch()} />
-        ) : (
-          <IssueBrief issue={issue.data} />
-        )}
+      <main className="pt-2 sm:pt-4">
+        <BackLink />
+        <div className="mt-6">
+          {issue.isPending ? (
+            <IssueSkeleton />
+          ) : issue.isError ? (
+            <IssueError error={issue.error} onRetry={() => issue.refetch()} />
+          ) : (
+            <IssueBrief issue={issue.data} />
+          )}
+        </div>
       </main>
     </div>
   )

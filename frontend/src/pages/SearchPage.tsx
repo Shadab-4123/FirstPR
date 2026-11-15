@@ -6,6 +6,7 @@ import { IssueRow } from '../components/IssueRow'
 import { Pagination } from '../components/Pagination'
 import { EmptyState, ErrorState, ResultsSkeleton } from '../components/ResultStates'
 import { SentenceFilter } from '../components/SentenceFilter'
+import { SiteHeader } from '../components/SiteHeader'
 import { PAGE_SIZE, useIssueFilters } from '../hooks/useIssueFilters'
 import { timeAgo } from '../lib/format'
 
@@ -43,16 +44,13 @@ export const SearchPage = () => {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-8">
-      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-6">
-        <span className="font-display text-xl font-bold tracking-tight">FirstPR</span>
-        {stats.data && (
-          <span className="text-sm text-muted">
-            {stats.data.issues_available.toLocaleString()} open issues in{' '}
-            {stats.data.repos_indexed.toLocaleString()} repos
-            {stats.data.last_sync && `, synced ${timeAgo(stats.data.last_sync.started_at)}`}
-          </span>
-        )}
-      </header>
+      <SiteHeader
+        aside={
+          stats.data &&
+          `${stats.data.issues_available.toLocaleString()} open issues in ${stats.data.repos_indexed.toLocaleString()} repos` +
+            (stats.data.last_sync ? `, synced ${timeAgo(stats.data.last_sync.started_at)}` : '')
+        }
+      />
 
       <main>
         <div className="pt-8 pb-12 sm:pt-14">

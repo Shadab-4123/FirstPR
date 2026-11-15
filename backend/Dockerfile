@@ -1,4 +1,5 @@
 # FirstPR backend: one image runs both the API and the sync worker.
+# Starting it applies pending migrations first (see CMD).
 #   API:  docker run <image>
 #   Sync: docker run <image> python -m app.sync.run --language python
 FROM python:3.12-slim
@@ -26,4 +27,7 @@ USER appuser
 # Hosts like Render/Railway/Fly pass the port in $PORT; default to 8000 locally.
 ENV PORT=8000
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers"]
+# Apply pending migrations before serving, so new code never meets an old schema
+# (that's how the site went down on 2026-11-15). Safe here because Render runs a
+# single instance; with several, run migrations as a separate pre-deploy step.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers"]

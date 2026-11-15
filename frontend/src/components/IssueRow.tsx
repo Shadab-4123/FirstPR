@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 
 import type { Issue } from '../api/client'
 import { compactNumber, plainText, pluralComments, timeAgo } from '../lib/format'
+import { LEVEL_INFO } from '../lib/levels'
 import { DifficultyMeter } from './DifficultyMeter'
 
 const MAX_LABELS = 4
@@ -55,6 +56,7 @@ export const IssueRow = ({ issue }: { issue: Issue }) => {
           label={issue.difficulty_label}
           reasons={issue.score_breakdown.difficulty.reasons}
         />
+        {issue.level && <span className="text-sm text-muted">{LEVEL_INFO[issue.level].short}</span>}
         <span className="text-sm text-muted">Updated {timeAgo(issue.updated_at)}</span>
         <span className="text-sm text-muted">
           {pluralComments(issue.comments_count)}

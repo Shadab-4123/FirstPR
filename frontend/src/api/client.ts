@@ -5,9 +5,12 @@ export type IssueDetail = components['schemas']['IssueDetail']
 export type IssuePage = components['schemas']['IssuePage']
 export type FilterMeta = components['schemas']['FilterMeta']
 export type Stats = components['schemas']['Stats']
+export type LevelSummary = components['schemas']['LevelSummary']
 export type IssueQuery = NonNullable<operations['list_issues_api_v1_issues_get']['parameters']['query']>
 export type Difficulty = NonNullable<IssueQuery['difficulty']>[number]
 export type SortKey = NonNullable<IssueQuery['sort']>
+export type Level = NonNullable<IssueQuery['level']>
+export type Kind = NonNullable<IssueQuery['kind']>
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -46,4 +49,5 @@ export const api = {
   getIssue: (id: number) => getJson<IssueDetail>(`/issues/${id}`),
   filterMeta: () => getJson<FilterMeta>('/meta/filters'),
   stats: () => getJson<Stats>('/stats'),
+  levels: () => getJson<LevelSummary[]>('/meta/levels'),
 }
