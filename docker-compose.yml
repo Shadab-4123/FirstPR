@@ -1,0 +1,62 @@
+# Local stack: Postgres + API + frontend.
+#   docker compose up --build          -> http://localhost:8080
+#   docker compose run --rm sync       -> fill the local DB from GitHub
+#
+# Uses its own Postgres, never your Supabase DB: DATABASE_URL below overrides
+# whatever is in backend/.env (only GITHUB_TOKEN etc. are taken from there).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: firstpr
+      POSTGRES_PASSWORD: firstpr
+      POSTGRES_DB: firstpr
+    ports:
+      - "5434:5432"  # 5433 is taken by scripts/dev-db.sh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firstpr"]
+      interval: 2s
+      retries: 15
+
+  api:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://firstpr:firstpr@db:5432/firstpr
+      CORS_ORIGINS: '["http://localhost:8080"]'
+    # Apply migrations, then start the API.
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+  # One-off job, not started by `up`. Run: docker compose run --rm sync
+  sync:
+    build: ./backend
+    profiles: ["jobs"]
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://firstpr:firstpr@db:5432/firstpr
+    command: python -m app.sync.run --language python --limit 200
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

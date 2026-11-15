@@ -25,3 +25,7 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
+# Local credential notes, never commit
+supabase.txt
+*.secret.txt
