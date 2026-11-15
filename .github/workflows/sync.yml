@@ -1,0 +1,49 @@
+# Daily sync: copies fresh good-first-issues from GitHub into Supabase.
+# Also runnable by hand: Actions tab -> Sync -> Run workflow.
+#
+# Repo secrets needed (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL        Supabase session-pooler URL (same as backend/.env)
+#   SYNC_GITHUB_TOKEN   your fine-grained PAT (secret names can't start with GITHUB_)
+name: Sync
+
+on:
+  schedule:
+    - cron: "30 2 * * *"  # 02:30 UTC = 08:00 IST, daily
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Max issues to look at per language
+        default: "300"
+
+# Never run two syncs at once: they would share one rate limit and slow each other down.
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90  # GitHub search allows 30 requests/min, so a full run is slow
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GITHUB_TOKEN: ${{ secrets.SYNC_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - run: pip install .
+      - name: Apply pending migrations
+        run: alembic upgrade head
+      - name: Sync
+        run: >-
+          python -m app.sync.run
+          --language python --language javascript --language typescript
+          --language go --language rust --language java --language "c++"
+          --language "c#" --language ruby --language php
+          --limit ${{ inputs.limit || '300' }}
