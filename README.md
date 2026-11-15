@@ -2,8 +2,9 @@
 
 **Find open-source issues you can actually fix: open, unclaimed, in active repos, with an honest difficulty estimate.**
 
-<!-- TODO(you): replace with the live URL once deployed (Week 1 goal) -->
-**Live demo:** _coming soon_ · **API docs:** _coming soon_ (FastAPI's `/docs` page)
+**Live demo:** https://firstpr-web.onrender.com · **API docs:** https://firstpr-api-5lk3.onrender.com/docs
+
+> Hosted on Render's free tier: if the site has been idle, the first search can take ~50 s while the API wakes up.
 
 <!-- TODO(you): record a ~15s GIF (search → filter → open an issue) and save it as docs/demo.gif, then uncomment:
 ![FirstPR demo](docs/demo.gif)
@@ -30,7 +31,8 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | Real data sync: 1,100+ open issues across 8+ languages in Supabase | ✅ done |
 | React frontend: search page with URL-synced filters | ✅ first version |
 | Dockerfiles + Docker Compose (tested locally), Render Blueprint | ✅ done |
-| Live deployment, CI | ⏳ planned |
+| Live deployment on Render (API + static site, Supabase DB) | ✅ done |
+| CI, scheduled sync | ⏳ planned |
 | Repo health score, ML difficulty model, GitHub OAuth, saved issues | ⏳ planned |
 
 ## Architecture
