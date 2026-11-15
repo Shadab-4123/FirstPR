@@ -19,6 +19,7 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -57,7 +58,13 @@ class Repo(Base):
 
     issues: Mapped[list["Issue"]] = relationship(back_populates="repo")
 
-    __table_args__ = (Index("ix_repos_topics", "topics", postgresql_using="gin"),)
+    __table_args__ = (
+        Index("ix_repos_topics", "topics", postgresql_using="gin"),
+        # Each index below was chosen with perf/bench_queries.py; see perf/INDEXES.md.
+        Index("ix_repos_health", health_score.desc().nulls_last()),  # "best match" ranking
+        Index("ix_repos_language_lower", func.lower(language)),  # language filter
+        Index("ix_repos_stars", stars.desc()),  # sort=stars, min_stars
+    )
 
 
 class Issue(Base):
@@ -114,6 +121,11 @@ class Issue(Base):
     __table_args__ = (
         Index("ix_issues_labels", "labels", postgresql_using="gin"),
         Index("ix_issues_search_vector", "search_vector", postgresql_using="gin"),
+        # Postgres doesn't index foreign keys by itself; every search joins on this.
+        Index("ix_issues_repo_id", "repo_id"),
+        # Partial: only open issues are ever listed, so closed ones stay out of the index.
+        Index("ix_issues_open_updated", updated_at.desc(), postgresql_where=text("state = 'open'")),
+        Index("ix_issues_open_created", created_at.desc(), postgresql_where=text("state = 'open'")),
     )
 
 
