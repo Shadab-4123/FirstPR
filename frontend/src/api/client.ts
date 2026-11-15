@@ -6,6 +6,7 @@ export type IssuePage = components['schemas']['IssuePage']
 export type FilterMeta = components['schemas']['FilterMeta']
 export type Stats = components['schemas']['Stats']
 export type LevelSummary = components['schemas']['LevelSummary']
+export type Me = components['schemas']['Me']
 export type IssueQuery = NonNullable<operations['list_issues_api_v1_issues_get']['parameters']['query']>
 export type Difficulty = NonNullable<IssueQuery['difficulty']>[number]
 export type SortKey = NonNullable<IssueQuery['sort']>
@@ -44,10 +45,26 @@ const getJson = async <T>(path: string, query: Record<string, unknown> = {}): Pr
   return response.json() as Promise<T>
 }
 
+/** A full-page navigation (not fetch): GitHub's sign-in page must open in the browser. */
+export const signInUrl = (returnTo: string) =>
+  `${BASE}/api/v1/auth/github/login?${new URLSearchParams({ next: returnTo })}`
+
 export const api = {
   searchIssues: (query: IssueQuery) => getJson<IssuePage>('/issues', query),
   getIssue: (id: number) => getJson<IssueDetail>(`/issues/${id}`),
   filterMeta: () => getJson<FilterMeta>('/meta/filters'),
   stats: () => getJson<Stats>('/stats'),
   levels: () => getJson<LevelSummary[]>('/meta/levels'),
+  /** The signed-in user, or null when signed out (the API answers 401). */
+  me: async (): Promise<Me | null> => {
+    try {
+      return await getJson<Me>('/auth/me')
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) return null
+      throw error
+    }
+  },
+  logout: async () => {
+    await fetch(`${BASE}/api/v1/auth/logout`, { method: 'POST' })
+  },
 }
