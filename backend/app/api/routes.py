@@ -15,6 +15,7 @@ from app.schemas.issue import (
     FacetCount,
     FilterMeta,
     HealthBreakdown,
+    IssueDetail,
     IssueOut,
     IssuePage,
     RepoSummary,
@@ -29,6 +30,9 @@ router = APIRouter(prefix="/api/v1", responses={422: {"model": ErrorResponse}})
 DB = Annotated[Session, Depends(get_db)]
 
 
+LIST_EXCERPT_CHARS = 600  # a two-line preview; the full stored body is for the detail page
+
+
 def to_issue_out(issue: Issue) -> IssueOut:
     reasons = score_difficulty(issue.difficulty_signals).reasons if issue.difficulty_signals else []
     repo = issue.repo
@@ -41,7 +45,7 @@ def to_issue_out(issue: Issue) -> IssueOut:
         id=issue.id,
         number=issue.number,
         title=issue.title,
-        body_excerpt=issue.body_excerpt,
+        body_excerpt=issue.body_excerpt[:LIST_EXCERPT_CHARS],
         html_url=issue.html_url,
         labels=issue.labels,
         comments_count=issue.comments_count,
@@ -78,13 +82,29 @@ def list_issues(db: DB, filters: Annotated[IssueFilters, Query()]) -> IssuePage:
 
 
 @router.get(
-    "/issues/{issue_id}", response_model=IssueOut, responses={404: {"model": ErrorResponse}}
+    "/issues/{issue_id}", response_model=IssueDetail, responses={404: {"model": ErrorResponse}}
 )
-def get_issue(issue_id: int, db: DB) -> IssueOut:
+def get_issue(issue_id: int, db: DB) -> IssueDetail:
     issue = db.get(Issue, issue_id, options=[joinedload(Issue.repo)])
     if issue is None:
         raise HTTPException(404, "Issue not found. It may have been closed and removed.")
-    return to_issue_out(issue)
+    # The sync measures the full body before storing an excerpt, so we can tell
+    # the reader when there's more to read on GitHub.
+    full_length = (issue.difficulty_signals or {}).get("body_length", 0)
+    truncated = full_length > len(issue.body_excerpt)
+    body = issue.body_excerpt
+    if truncated:  # end on a whole word, not "add a row. O"
+        body = body[: body.rfind(" ")].rstrip() + " …" if " " in body else body + "…"
+    return IssueDetail(
+        **to_issue_out(issue).model_dump(exclude={"body_excerpt"}),
+        body_excerpt=issue.body_excerpt[:LIST_EXCERPT_CHARS],
+        body=body,
+        body_truncated=truncated,
+        author_association=issue.author_association,
+        assignee_count=issue.assignee_count,
+        has_linked_pr=issue.has_linked_pr,
+        last_checked_at=issue.last_checked_at,
+    )
 
 
 # Tiny in-process TTL cache: filter facets change only when a sync runs.

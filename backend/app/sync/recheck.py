@@ -29,7 +29,7 @@ from app.core.logging import configure_logging
 from app.db.models import Issue, SyncRun
 from app.github.client import GitHubClient, GitHubError
 from app.scoring.availability import check_availability, has_open_linked_pr
-from app.sync.mapping import map_issue
+from app.sync.mapping import BODY_EXCERPT_CHARS, map_issue
 
 log = logging.getLogger("firstpr.recheck")
 
@@ -66,8 +66,15 @@ async def recheck_issue(
     was_available = issue.is_available
     stats.checked += 1
 
+    # Issues stored before BODY_EXCERPT_CHARS grew still hold a short body. Asking
+    # without the ETag makes GitHub send the issue again instead of a 304; once
+    # stored in full, the ETag is used as normal. A one-time cost per issue.
+    full_length = (issue.difficulty_signals or {}).get("body_length", 0)
+    body_is_short = len(issue.body_excerpt) < min(full_length, BODY_EXCERPT_CHARS)
     try:
-        resp = await client.get_issue(full_name, issue.number, etag=issue.etag)
+        resp = await client.get_issue(
+            full_name, issue.number, etag=None if body_is_short else issue.etag
+        )
     except GitHubError as exc:
         if exc.status not in GONE_STATUSES:
             raise

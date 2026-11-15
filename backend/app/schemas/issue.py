@@ -53,6 +53,17 @@ class IssueOut(BaseModel):
     score_breakdown: ScoreBreakdown
 
 
+class IssueDetail(IssueOut):
+    """Everything the overview page needs to judge an issue before opening GitHub."""
+
+    body: str  # markdown, up to BODY_EXCERPT_CHARS
+    body_truncated: bool  # true when the issue on GitHub is longer than `body`
+    author_association: str | None  # e.g. MEMBER: a maintainer wrote it
+    assignee_count: int
+    has_linked_pr: bool
+    last_checked_at: datetime | None  # when we last confirmed it's still free
+
+
 class IssuePage(BaseModel):
     items: list[IssueOut]
     page: int

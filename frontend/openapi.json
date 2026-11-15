@@ -200,7 +200,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueOut"
+                  "$ref": "#/components/schemas/IssueDetail"
                 }
               }
             }
@@ -483,6 +483,152 @@
           "reasons"
         ],
         "title": "HealthBreakdown"
+      },
+      "IssueDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body_excerpt": {
+            "type": "string",
+            "title": "Body Excerpt"
+          },
+          "html_url": {
+            "type": "string",
+            "title": "Html Url"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "comments_count": {
+            "type": "integer",
+            "title": "Comments Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "difficulty_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Label"
+          },
+          "repo": {
+            "$ref": "#/components/schemas/RepoSummary"
+          },
+          "score_breakdown": {
+            "$ref": "#/components/schemas/ScoreBreakdown"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "body_truncated": {
+            "type": "boolean",
+            "title": "Body Truncated"
+          },
+          "author_association": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Association"
+          },
+          "assignee_count": {
+            "type": "integer",
+            "title": "Assignee Count"
+          },
+          "has_linked_pr": {
+            "type": "boolean",
+            "title": "Has Linked Pr"
+          },
+          "last_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "title",
+          "body_excerpt",
+          "html_url",
+          "labels",
+          "comments_count",
+          "created_at",
+          "updated_at",
+          "is_available",
+          "unavailable_reason",
+          "difficulty_label",
+          "repo",
+          "score_breakdown",
+          "body",
+          "body_truncated",
+          "author_association",
+          "assignee_count",
+          "has_linked_pr",
+          "last_checked_at"
+        ],
+        "title": "IssueDetail",
+        "description": "Everything the overview page needs to judge an issue before opening GitHub."
       },
       "IssueOut": {
         "properties": {

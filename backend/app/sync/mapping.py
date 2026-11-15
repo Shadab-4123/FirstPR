@@ -6,7 +6,8 @@ from typing import Any
 from app.scoring.availability import check_availability
 from app.scoring.difficulty import extract_signals, score_difficulty
 
-BODY_EXCERPT_CHARS = 600
+# Enough for the issue overview page to show what it's about; search results send less.
+BODY_EXCERPT_CHARS = 4000
 
 
 def _dt(value: str | None) -> datetime | None:

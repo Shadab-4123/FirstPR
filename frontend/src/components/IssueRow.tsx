@@ -1,3 +1,5 @@
+import { Link } from 'react-router'
+
 import type { Issue } from '../api/client'
 import { compactNumber, plainText, pluralComments, timeAgo } from '../lib/format'
 import { DifficultyMeter } from './DifficultyMeter'
@@ -26,10 +28,10 @@ export const IssueRow = ({ issue }: { issue: Issue }) => {
         </p>
 
         <h2 className="font-display text-xl leading-snug font-medium text-pretty">
-          <a href={issue.html_url} target="_blank" rel="noreferrer" className="hover:text-link hover:underline">
+          {/* fromSearch lets the brief's back link return to these exact results */}
+          <Link to={`/issues/${issue.id}`} state={{ fromSearch: true }} className="hover:text-link hover:underline">
             {issue.title}
-            <span className="sr-only"> (opens issue #{issue.number} on GitHub)</span>
-          </a>
+          </Link>
         </h2>
 
         {issue.body_excerpt && (

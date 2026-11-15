@@ -148,6 +148,56 @@ export interface components {
              */
             method: "baseline_heuristic";
         };
+        /**
+         * IssueDetail
+         * @description Everything the overview page needs to judge an issue before opening GitHub.
+         */
+        IssueDetail: {
+            /** Id */
+            id: number;
+            /** Number */
+            number: number;
+            /** Title */
+            title: string;
+            /** Body Excerpt */
+            body_excerpt: string;
+            /** Html Url */
+            html_url: string;
+            /** Labels */
+            labels: string[];
+            /** Comments Count */
+            comments_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Is Available */
+            is_available: boolean;
+            /** Unavailable Reason */
+            unavailable_reason: string | null;
+            /** Difficulty Label */
+            difficulty_label: ("easy" | "medium" | "hard") | null;
+            repo: components["schemas"]["RepoSummary"];
+            score_breakdown: components["schemas"]["ScoreBreakdown"];
+            /** Body */
+            body: string;
+            /** Body Truncated */
+            body_truncated: boolean;
+            /** Author Association */
+            author_association: string | null;
+            /** Assignee Count */
+            assignee_count: number;
+            /** Has Linked Pr */
+            has_linked_pr: boolean;
+            /** Last Checked At */
+            last_checked_at: string | null;
+        };
         /** IssueOut */
         IssueOut: {
             /** Id */
@@ -310,7 +360,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IssueOut"];
+                    "application/json": components["schemas"]["IssueDetail"];
                 };
             };
             /** @description Not Found */

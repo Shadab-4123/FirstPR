@@ -131,3 +131,26 @@ async def test_sync_does_not_overwrite_a_detected_claim(seeded, fixture):
         upsert_issue(db, map_issue(item, _issue(factory, issue_id).repo_id))
         db.commit()
     assert _issue(factory, issue_id).unavailable_reason == "claimed_in_comments"
+
+
+@respx.mock
+async def test_short_stored_body_is_refetched_without_etag(seeded):
+    """Issues saved when we kept 600 chars get their full body on the next re-check."""
+    factory, item, issue_id, url = seeded
+    with factory() as db:
+        db.query(Issue).filter(Issue.id == issue_id).update({
+            "body_excerpt": "x" * 600, "etag": 'W/"old"',
+            "difficulty_signals": {"body_length": 2500},
+        })
+        db.commit()
+    route = respx.get(url).respond(200, json={**item, "body": "y" * 2500, "comments": 0},
+                                   headers={"ETag": 'W/"new"'})
+    _mock_extras(url)
+    await _recheck(factory)
+
+    assert "If-None-Match" not in route.calls.last.request.headers
+    issue = _issue(factory, issue_id)
+    assert len(issue.body_excerpt) == 2500 and issue.etag == 'W/"new"'
+
+    await _recheck(factory)  # next time: body is complete, so the ETag is used again
+    assert route.calls.last.request.headers["If-None-Match"] == 'W/"new"'

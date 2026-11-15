@@ -1,6 +1,7 @@
 import type { components, operations } from './schema'
 
 export type Issue = components['schemas']['IssueOut']
+export type IssueDetail = components['schemas']['IssueDetail']
 export type IssuePage = components['schemas']['IssuePage']
 export type FilterMeta = components['schemas']['FilterMeta']
 export type Stats = components['schemas']['Stats']
@@ -42,6 +43,7 @@ const getJson = async <T>(path: string, query: Record<string, unknown> = {}): Pr
 
 export const api = {
   searchIssues: (query: IssueQuery) => getJson<IssuePage>('/issues', query),
+  getIssue: (id: number) => getJson<IssueDetail>(`/issues/${id}`),
   filterMeta: () => getJson<FilterMeta>('/meta/filters'),
   stats: () => getJson<Stats>('/stats'),
 }
