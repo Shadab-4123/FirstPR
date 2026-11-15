@@ -25,15 +25,18 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | Postgres schema + Alembic migrations (`repos`, `issues`, `sync_runs`) | ✅ done |
 | GitHub client: search, repo fetch, rate-limit handling, ETags, retries | ✅ done |
 | Sync worker: date-window splitting past GitHub's 1,000-result cap, idempotent upserts | ✅ done |
-| Availability check + difficulty heuristic | ✅ done |
+| Difficulty heuristic | ✅ done |
+| Re-check job: hides closed, assigned, claimed ("I'll take this"), linked-PR and de-labelled issues | ✅ done |
+| Repo health score (explainable 0–100, used for "best match" ranking) | ✅ done |
+| Search indexes chosen with `EXPLAIN ANALYZE` ([before/after](perf/INDEXES.md)) | ✅ done |
 | REST API: `/issues`, `/issues/{id}`, `/meta/filters`, `/stats`, `/health` | ✅ done |
 | Supabase Postgres (Mumbai) with Row Level Security on all tables | ✅ done |
 | Real data sync: 1,100+ open issues across 8+ languages in Supabase | ✅ done |
 | React frontend: search page with URL-synced filters | ✅ first version |
 | Dockerfiles + Docker Compose (tested locally), Render Blueprint | ✅ done |
 | Live deployment on Render (API + static site, Supabase DB) | ✅ done |
-| CI, scheduled sync | ⏳ planned |
-| Repo health score, ML difficulty model, GitHub OAuth, saved issues | ⏳ planned |
+| CI (lint, types, tests, Docker build) + daily sync workflow | ✅ done |
+| ML difficulty model, GitHub OAuth, saved issues | ⏳ planned |
 
 ## Architecture
 
