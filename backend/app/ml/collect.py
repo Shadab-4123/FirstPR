@@ -161,9 +161,14 @@ async def collect_window(
         data = await client.graphql(QUERY, {"q": query, "first": PAGE_SIZE, "cursor": cursor})
         search = data["search"]
         if cursor is None and needs_split(search["issueCount"], window):
-            for half in window.split():
-                saved += await collect_window(client, db, language, half, min_stars=min_stars,
-                                              budget=budget - saved, skipped=skipped)
+            # Share the budget between the halves, or the first (older) half takes it all
+            # and the sample covers a few days instead of the whole window. Whatever the
+            # first half can't fill rolls over to the second.
+            older, newer = window.split()
+            saved += await collect_window(client, db, language, older, min_stars=min_stars,
+                                          budget=budget // 2, skipped=skipped)
+            saved += await collect_window(client, db, language, newer, min_stars=min_stars,
+                                          budget=budget - saved, skipped=skipped)
             return saved
         rows = []
         for node in search["nodes"]:
@@ -188,11 +193,15 @@ async def collect(
         for language in languages:
             skipped: Counter = Counter()
             saved = 0
-            for window in monthly_windows(today, months):
-                if saved >= per_language:
-                    break
+            # An equal share per month, so the data spans the whole period: the time-based
+            # train/test split needs old *and* new examples. A quiet month that can't fill
+            # its share passes the remainder on to the next (older) one.
+            windows = monthly_windows(today, months)
+            for i, window in enumerate(windows):
+                months_left = len(windows) - i
+                share = -(-(per_language - saved) // months_left)  # ceiling division
                 saved += await collect_window(client, db, language, window, min_stars=min_stars,
-                                              budget=per_language - saved, skipped=skipped)
+                                              budget=share, skipped=skipped)
             totals[language] = saved
             log.info("language done", extra={"language": language, "saved": saved,
                                              **{f"seen_{k}": v for k, v in skipped.items()}})

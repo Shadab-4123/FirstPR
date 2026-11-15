@@ -44,7 +44,9 @@ def db_session_factory(migrated_engine):
     from sqlalchemy.orm import sessionmaker
 
     with migrated_engine.begin() as conn:
-        conn.execute(text("truncate issues, repos, sync_runs restart identity cascade"))
+        conn.execute(text(
+            "truncate issues, repos, sync_runs, training_examples restart identity cascade"
+        ))
     from app.api import routes
 
     routes._cache.clear()

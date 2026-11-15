@@ -127,3 +127,31 @@ async def test_graphql_errors_raise():
     async with GitHubClient("t", sleep=_no_sleep) as client:
         with pytest.raises(GitHubError, match="Bad field"):
             await client.graphql("query { x }", {})
+
+
+@respx.mock
+async def test_budget_is_spread_across_months_not_spent_on_the_first(db_session_factory, nodes):
+    """Regression: the first run saved 549 examples, all from a single week."""
+    import itertools
+    import json
+    import re
+
+    good, ids = nodes[1], itertools.count(1)
+
+    def answer(request):
+        q = json.loads(request.content)["variables"]["q"]
+        start, end = re.search(r"closed:(\S+)\.\.(\S+)", q).groups()
+        # Every month has plenty of issues; each one says which window it came from.
+        page = [{**good, "databaseId": next(ids), "closedAt": f"{end}T12:00:00Z"}
+                for _ in range(10)]
+        return httpx.Response(200, json=_page(page, total=10))
+
+    respx.post(GRAPHQL).mock(side_effect=answer)
+    async with GitHubClient("t", sleep=_no_sleep) as client:
+        saved = await collect(db_session_factory, client, ["python"], per_language=4, months=4,
+                              min_stars=0, today=date(2025, 6, 30))
+
+    with db_session_factory() as db:
+        windows = db.execute(select(TrainingExample.issue_closed_at).distinct()).scalars().all()
+    assert saved == {"python": 4}
+    assert len(windows) == 4  # one per 30-day window, not four from the newest
