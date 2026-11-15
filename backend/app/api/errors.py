@@ -10,7 +10,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 log = logging.getLogger(__name__)
 
 _CODES = {400: "bad_request", 401: "unauthorized", 403: "forbidden", 404: "not_found",
-          405: "method_not_allowed", 429: "rate_limited"}
+          405: "method_not_allowed", 429: "rate_limited", 502: "upstream_error",
+          503: "unavailable"}
 
 
 def _error(status: int, code: str, message: str) -> JSONResponse:

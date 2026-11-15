@@ -144,4 +144,6 @@ def test_sign_in_not_configured_is_a_clear_503(client, monkeypatch):
     monkeypatch.delenv("GITHUB_CLIENT_ID")
     get_settings.cache_clear()
     resp = client.get("/api/v1/auth/github/login")
-    assert resp.status_code == 503 and "isn't configured" in resp.json()["error"]["message"]
+    body = resp.json()["error"]
+    assert resp.status_code == 503 and body["code"] == "unavailable"
+    assert "isn't configured" in body["message"]
