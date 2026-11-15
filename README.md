@@ -25,7 +25,8 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | Postgres schema + Alembic migrations (`repos`, `issues`, `sync_runs`) | ✅ done |
 | GitHub client: search, repo fetch, rate-limit handling, ETags, retries | ✅ done |
 | Sync worker: date-window splitting past GitHub's 1,000-result cap, idempotent upserts | ✅ done |
-| Difficulty heuristic | ✅ done |
+| Difficulty model: trained on 3,291 past issues, beats the heuristic baseline ([evaluation](ml/EVAL.md)) | ✅ done |
+| Explore by level (new / some experience / experienced) and type, plus a first-PR guide | ✅ done |
 | Re-check job: hides closed, assigned, claimed ("I'll take this"), linked-PR and de-labelled issues | ✅ done |
 | Repo health score (explainable 0–100, used for "best match" ranking) | ✅ done |
 | Search indexes chosen with `EXPLAIN ANALYZE` ([before/after](perf/INDEXES.md)) | ✅ done |
@@ -36,7 +37,7 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | Dockerfiles + Docker Compose (tested locally), Render Blueprint | ✅ done |
 | Live deployment on Render (API + static site, Supabase DB) | ✅ done |
 | CI (lint, types, tests, Docker build) + daily sync workflow | ✅ done |
-| ML difficulty model, GitHub OAuth, saved issues | ⏳ planned |
+| GitHub OAuth, saved issues, skill-based ranking | ⏳ planned |
 
 ## Architecture
 
@@ -55,7 +56,7 @@ Search requests are answered from our own Postgres, never by calling GitHub live
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy 2, Alembic, httpx, Pydantic
 - **Database:** PostgreSQL on Supabase (full-text search, array labels); local Postgres for tests
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, TanStack Query, types generated from the API's OpenAPI schema
-- **ML (planned):** scikit-learn
+- **ML:** scikit-learn (logistic regression), pandas; time-based train/test split
 - **CI/CD (planned):** GitHub Actions
 
 ## Local setup
@@ -152,7 +153,8 @@ Errors always use the same shape: `{ "error": { "code": "...", "message": "..." 
 | Open issues indexed | TODO |
 | Repos indexed | TODO |
 | Search p95 latency (before → after indexes) | TODO ms → TODO ms |
-| Difficulty model accuracy vs heuristic baseline | TODO % vs TODO % |
+| Difficulty model accuracy vs heuristic baseline (658 held-out issues) | 40.6% vs 30.4% |
+| Severe errors (easy↔hard), model vs heuristic | 14.4% vs 22.5% |
 | Backend test coverage | TODO % |
 
 ## Design decisions

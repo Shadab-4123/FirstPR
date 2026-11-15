@@ -91,3 +91,5 @@ Strongest signals, from the logistic regression's weights (hard vs easy):
 ## Decision
 
 Ship the model in place of the heuristic, because it beats it on every measure and especially on severe errors. Show its estimate with a confidence note, and don't present hours as time-to-fix.
+
+**Follow-up after a dry run on live issues:** the model's lean toward "hard" (it predicted hard for 56% of test issues; 38% really were) would have cut the "New to open source" level to about a fifth of its size if that level required "easy". The level rule therefore accepts **easy or medium** for good-first-issues (`app/scoring/classify.py`). The issue page shows only reasons about the issue's content. Title length and repo size are real signals in the model, but they read confusingly as explanations ("short title → hard").

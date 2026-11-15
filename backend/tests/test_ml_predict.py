@@ -132,6 +132,6 @@ def test_api_reports_model_method_confidence_and_reasons(db_session_factory, sto
             "score_breakdown"]["difficulty"]
     finally:
         app.dependency_overrides.clear()
-    assert difficulty["method"] == METHOD
+    assert difficulty["method"] == METHOD and difficulty["score"] is None
     assert 0 < difficulty["confidence"] <= 1
     assert difficulty["reasons"] == _issue(db_session_factory, issue_id).difficulty_reasons

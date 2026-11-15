@@ -67,7 +67,8 @@ def to_issue_out(issue: Issue) -> IssueOut:
         score_breakdown=ScoreBreakdown(
             difficulty=DifficultyBreakdown(
                 label=issue.difficulty_label,  # type: ignore[arg-type]
-                score=issue.difficulty_score,
+                # The stored score is the heuristic's; next to a model label it would contradict.
+                score=None if issue.difficulty_method == "model_v1" else issue.difficulty_score,
                 reasons=reasons,
                 method=issue.difficulty_method or "baseline_heuristic",  # type: ignore[arg-type]
                 confidence=issue.difficulty_confidence,
