@@ -64,7 +64,9 @@ def list_issues(db: DB, filters: Annotated[IssueFilters, Query()]) -> IssuePage:
     )
 
 
-@router.get("/issues/{issue_id}", response_model=IssueOut, responses={404: {"model": ErrorResponse}})
+@router.get(
+    "/issues/{issue_id}", response_model=IssueOut, responses={404: {"model": ErrorResponse}}
+)
 def get_issue(issue_id: int, db: DB) -> IssueOut:
     issue = db.get(Issue, issue_id, options=[joinedload(Issue.repo)])
     if issue is None:
@@ -111,9 +113,11 @@ def filter_meta(db: DB) -> FilterMeta:
             .group_by(Issue.difficulty_label)
         ).all()
         return FilterMeta(
-            languages=[FacetCount(value=v, count=n) for v, n in languages],
+            languages=[FacetCount(value=v, count=n) for v, n in languages if v is not None],
             labels=[FacetCount(value=v, count=n) for v, n in labels],
-            difficulties=[FacetCount(value=v, count=n) for v, n in difficulties],
+            difficulties=[
+                FacetCount(value=v, count=n) for v, n in difficulties if v is not None
+            ],
         )
 
     return _cached("filters", build)

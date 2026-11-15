@@ -12,10 +12,10 @@ from app.db.models import Issue, Repo
 
 def upsert_repo(db: Session, row: dict[str, Any], etag: str | None) -> int:
     values = {**row, "etag": etag, "fetched_at": datetime.now(UTC)}
-    stmt = insert(Repo).values(**values)
-    stmt = stmt.on_conflict_do_update(
+    insert_stmt = insert(Repo).values(**values)
+    stmt = insert_stmt.on_conflict_do_update(
         index_elements=[Repo.github_id],
-        set_={k: stmt.excluded[k] for k in values if k != "github_id"},
+        set_={k: insert_stmt.excluded[k] for k in values if k != "github_id"},
     ).returning(Repo.id)
     return db.execute(stmt).scalar_one()
 
@@ -28,9 +28,9 @@ def touch_repo(db: Session, repo_id: int) -> None:
 def upsert_issue(db: Session, row: dict[str, Any]) -> int:
     now = datetime.now(UTC)
     values = {**row, "last_seen_at": now, "last_checked_at": now}
-    stmt = insert(Issue).values(**values)
-    stmt = stmt.on_conflict_do_update(
+    insert_stmt = insert(Issue).values(**values)
+    stmt = insert_stmt.on_conflict_do_update(
         index_elements=[Issue.github_id],
-        set_={k: stmt.excluded[k] for k in values if k != "github_id"},
+        set_={k: insert_stmt.excluded[k] for k in values if k != "github_id"},
     ).returning(Issue.id)
     return db.execute(stmt).scalar_one()
