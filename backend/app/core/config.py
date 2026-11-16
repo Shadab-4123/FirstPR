@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     # The site's public origin (the frontend, which proxies /api to us).
     app_url: str = "http://localhost:5173"
 
+    # Error monitoring (sentry.io). Empty DSN = Sentry is off, nothing is sent.
+    sentry_dsn: str | None = None
+    sentry_environment: str = "development"
+    # Share of requests traced for performance. 0 keeps the free plan's quota for errors.
+    sentry_traces_sample_rate: float = 0.0
+
     # Difficulty model file; empty = ml/difficulty_model.joblib in the repo checkout.
     difficulty_model_path: str = ""
 

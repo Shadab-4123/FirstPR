@@ -10,6 +10,7 @@ from app.api.saved import router as saved_router
 from app.auth.routes import router as auth_router
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
+from app.core.monitoring import init_sentry
 
 log = logging.getLogger("firstpr.app")
 SIGNIN_SETTINGS = ("github_client_id", "github_client_secret", "token_encryption_key", "app_url")
@@ -27,6 +28,7 @@ def _log_signin_config(settings: Settings) -> None:
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level)
+    init_sentry(settings, "api")
     _log_signin_config(settings)
 
     app = FastAPI(

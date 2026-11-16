@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.monitoring import init_sentry
 from app.db.models import Repo, SyncRun
 from app.github.client import GitHubClient, GitHubError
 from app.ml.predict import DifficultyModel
@@ -256,6 +257,7 @@ def main() -> None:
 
     settings = get_settings()
     configure_logging(settings.log_level)
+    init_sentry(settings, "sync")
     if not settings.github_token:
         log.warning("GITHUB_TOKEN not set: running unauthenticated (60 core / 10 search per hour"
                     " and minute). Expect long waits.")
