@@ -114,7 +114,7 @@ docker compose run --rm sync           # load ~200 Python issues into the Docker
 **API types:** after changing a backend response model, regenerate the frontend types:
 
 ```bash
-cd backend && python -c "import json; from app.main import app; print(json.dumps(app.openapi(), indent=2))" > ../frontend/openapi.json
+cd backend && python -c "import json, pathlib; from app.main import app; pathlib.Path('../frontend/openapi.json').write_text(json.dumps(app.openapi(), indent=2) + '\n')"
 cd ../frontend && npm run gen:api
 ```
 

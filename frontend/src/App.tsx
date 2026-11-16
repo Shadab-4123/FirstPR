@@ -9,6 +9,9 @@ import { SearchPage } from './pages/SearchPage'
 const IssuePage = lazy(() => import('./pages/IssuePage').then((m) => ({ default: m.IssuePage })))
 const ExplorePage = lazy(() => import('./pages/ExplorePage').then((m) => ({ default: m.ExplorePage })))
 const LevelPage = lazy(() => import('./pages/LevelPage').then((m) => ({ default: m.LevelPage })))
+const MyIssuesPage = lazy(() =>
+  import('./pages/MyIssuesPage').then((m) => ({ default: m.MyIssuesPage })),
+)
 const GuidePage = lazy(() => import('./pages/GuidePage').then((m) => ({ default: m.GuidePage })))
 
 const Lazy = ({ page }: { page: ReactNode }) => <Suspense fallback={null}>{page}</Suspense>
@@ -26,6 +29,7 @@ export const App = () => (
         <Route path="/explore" element={<Lazy page={<ExplorePage />} />} />
         <Route path="/explore/:level" element={<Lazy page={<LevelPage />} />} />
         <Route path="/guide" element={<Lazy page={<GuidePage />} />} />
+        <Route path="/my-issues" element={<Lazy page={<MyIssuesPage />} />} />
       </Routes>
     </BrowserRouter>
   </QueryClientProvider>

@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     Computed,
     DateTime,
     Float,
@@ -222,3 +223,31 @@ class UserSession(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SavedIssue(Base):
+    """An issue a user is keeping an eye on, and how far they've got with it.
+
+    Issues are never deleted (a closed one keeps its row), so a "merged" entry
+    survives the issue closing on GitHub.
+    """
+
+    __tablename__ = "saved_issues"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    issue_id: Mapped[int] = mapped_column(
+        ForeignKey("issues.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(12), default="saved")  # see SAVED_STATUSES
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    issue: Mapped[Issue] = relationship()
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('saved', 'working', 'pr_opened', 'merged')", name="ck_saved_issues_status"
+        ),
+    )

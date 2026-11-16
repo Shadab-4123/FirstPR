@@ -45,8 +45,8 @@ def db_session_factory(migrated_engine):
 
     with migrated_engine.begin() as conn:
         conn.execute(text(
-            "truncate issues, repos, sync_runs, training_examples, users, user_sessions "
-            "restart identity cascade"
+            "truncate issues, repos, sync_runs, training_examples, users, user_sessions, "
+            "saved_issues restart identity cascade"
         ))
     from app.api import routes
 

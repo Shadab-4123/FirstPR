@@ -552,6 +552,169 @@
           }
         }
       }
+    },
+    "/api/v1/me/saved": {
+      "get": {
+        "tags": [
+          "saved"
+        ],
+        "summary": "List Saved",
+        "description": "Most recently changed first.",
+        "operationId": "list_saved_api_v1_me_saved_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedIssueOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Saved Api V1 Me Saved Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/saved/{issue_id}": {
+      "put": {
+        "tags": [
+          "saved"
+        ],
+        "summary": "Save Issue",
+        "description": "Save an issue, or move it to another status. Safe to repeat.",
+        "operationId": "save_issue_api_v1_me_saved__issue_id__put",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedIssueOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "saved"
+        ],
+        "summary": "Unsave Issue",
+        "description": "Remove from My issues. Removing something that isn't saved is not an error.",
+        "operationId": "unsave_issue_api_v1_me_saved__issue_id__delete",
+        "parameters": [
+          {
+            "name": "issue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Issue Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1253,6 +1416,63 @@
           "health_score"
         ],
         "title": "RepoSummary"
+      },
+      "SaveRequest": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "working",
+              "pr_opened",
+              "merged"
+            ],
+            "title": "Status",
+            "default": "saved"
+          }
+        },
+        "type": "object",
+        "title": "SaveRequest"
+      },
+      "SavedIssueOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "working",
+              "pr_opened",
+              "merged"
+            ],
+            "title": "Status"
+          },
+          "saved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Saved At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "issue_state": {
+            "type": "string",
+            "title": "Issue State"
+          },
+          "issue": {
+            "$ref": "#/components/schemas/IssueOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "saved_at",
+          "updated_at",
+          "issue_state",
+          "issue"
+        ],
+        "title": "SavedIssueOut"
       },
       "ScoreBreakdown": {
         "properties": {

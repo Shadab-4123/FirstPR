@@ -1,16 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useLocation } from 'react-router'
 
 import { api, signInUrl } from '../api/client'
+import { useMe } from '../lib/saved'
 
 /** "Sign in with GitHub", or the signed-in user's avatar and a sign-out button. */
 export const AccountMenu = () => {
   const queryClient = useQueryClient()
   const location = useLocation()
-  const me = useQuery({ queryKey: ['me'], queryFn: api.me, staleTime: 5 * 60_000 })
+  const me = useMe()
   const logout = useMutation({
     mutationFn: api.logout,
-    onSuccess: () => queryClient.setQueryData(['me'], null),
+    onSuccess: () => {
+      queryClient.setQueryData(['me'], null)
+      queryClient.removeQueries({ queryKey: ['saved'] }) // never show the last user's list
+    },
   })
 
   if (me.isPending) return <span className="inline-block h-7 w-24" aria-hidden="true" />

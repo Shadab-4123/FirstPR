@@ -7,6 +7,8 @@ export type FilterMeta = components['schemas']['FilterMeta']
 export type Stats = components['schemas']['Stats']
 export type LevelSummary = components['schemas']['LevelSummary']
 export type Me = components['schemas']['Me']
+export type SavedIssue = components['schemas']['SavedIssueOut']
+export type SavedStatus = SavedIssue['status']
 export type IssueQuery = NonNullable<operations['list_issues_api_v1_issues_get']['parameters']['query']>
 export type Difficulty = NonNullable<IssueQuery['difficulty']>[number]
 export type SortKey = NonNullable<IssueQuery['sort']>
@@ -45,6 +47,20 @@ const getJson = async <T>(path: string, query: Record<string, unknown> = {}): Pr
   return response.json() as Promise<T>
 }
 
+/** PUT/DELETE with a JSON body; the session cookie rides along (same origin). */
+const send = async <T>(method: 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T | null> => {
+  const response = await fetch(`${BASE}/api/v1${path}`, {
+    method,
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new ApiError(response.status, data?.error?.message ?? `Request failed (${response.status})`)
+  }
+  return response.status === 204 ? null : (response.json() as Promise<T>)
+}
+
 /** A full-page navigation (not fetch): GitHub's sign-in page must open in the browser. */
 export const signInUrl = (returnTo: string) =>
   `${BASE}/api/v1/auth/github/login?${new URLSearchParams({ next: returnTo })}`
@@ -64,6 +80,11 @@ export const api = {
       throw error
     }
   },
+  saved: () => getJson<SavedIssue[]>('/me/saved'),
+  /** Save an issue, or move it to another status. */
+  setSaved: (issueId: number, status: SavedStatus) =>
+    send<SavedIssue>('PUT', `/me/saved/${issueId}`, { status }) as Promise<SavedIssue>,
+  unsave: (issueId: number) => send<null>('DELETE', `/me/saved/${issueId}`),
   logout: async () => {
     await fetch(`${BASE}/api/v1/auth/logout`, { method: 'POST' })
   },

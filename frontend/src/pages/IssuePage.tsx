@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm'
 import { ApiError, api, type IssueDetail } from '../api/client'
 import { DifficultyMeter } from '../components/DifficultyMeter'
 import { SiteHeader } from '../components/SiteHeader'
+import { TrackIssue } from '../components/TrackIssue'
 import { UNAVAILABLE_REASONS, authorRole, compactNumber, formatDate, pluralComments, timeAgo } from '../lib/format'
 
 /** A one-page brief on an issue, so you can decide before diving into GitHub. */
@@ -145,6 +146,7 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
           >
             Open on GitHub
           </a>
+          <TrackIssue issueId={issue.id} />
           <NextSteps />
         </aside>
       </div>
