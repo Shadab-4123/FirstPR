@@ -13,11 +13,11 @@ case "${1:-start}" in
       echo "Initialized cluster in $DATA"
     fi
     "$PGBIN/pg_ctl" -D "$DATA" -o "-p $PORT -k $DATA -c listen_addresses=localhost" -l "$DATA/server.log" -w start
-    for db in firstpr firstpr_test; do
+    for db in firstpr firstpr_test firstpr_e2e; do
       psql -h localhost -p "$PORT" -U firstpr -d postgres -tc "select 1 from pg_database where datname='$db'" | grep -q 1 \
         || psql -h localhost -p "$PORT" -U firstpr -d postgres -qc "create database $db"
     done
-    echo "Postgres ready on localhost:$PORT (databases: firstpr, firstpr_test)"
+    echo "Postgres ready on localhost:$PORT (databases: firstpr, firstpr_test, firstpr_e2e)"
     ;;
   stop)   "$PGBIN/pg_ctl" -D "$DATA" -m fast stop ;;
   status) "$PGBIN/pg_ctl" -D "$DATA" status ;;

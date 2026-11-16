@@ -37,7 +37,12 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | Dockerfiles + Docker Compose (tested locally), Render Blueprint | ✅ done |
 | Live deployment on Render (API + static site, Supabase DB) | ✅ done |
 | CI (lint, types, tests, Docker build) + daily sync workflow | ✅ done |
-| GitHub OAuth, saved issues, skill-based ranking | ⏳ planned |
+| Sign in with GitHub (OAuth, encrypted tokens, server-side sessions) | ✅ done |
+| Saved issues with status tracking (Saved → Working on it → PR opened → Merged) | ✅ done |
+| "For you": languages and level inferred from public GitHub activity, explained ranking | ✅ done |
+| Public stats page: index counts, sync freshness, model vs baselines | ✅ done |
+| Frontend tests (Vitest + Testing Library) and a Playwright flow in CI | ✅ done |
+| Load test, Sentry, demo GIF | ⏳ planned |
 
 ## Architecture
 
@@ -126,7 +131,13 @@ cd ../frontend && npm run gen:api
 cd backend && source .venv/bin/activate
 pytest            # GitHub calls are replayed from recorded fixtures; tests use the firstpr_test DB
 ruff check .
+
+cd ../frontend
+npm test          # Vitest: components and helpers, with fetch mocked
+npm run e2e       # Playwright: production build + real API + the firstpr_e2e DB, in Chromium
 ```
+
+`npm run e2e` starts its own API and site, applies migrations to `firstpr_e2e`, and loads the test fixtures there. Run `npx playwright install chromium` once first.
 
 ## API
 
