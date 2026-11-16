@@ -211,6 +211,9 @@ class User(Base):
     last_login_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # Guessed from public GitHub activity (app/skills/infer.py); None until first read.
+    skills: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    skills_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class UserSession(Base):

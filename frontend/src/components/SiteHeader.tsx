@@ -1,21 +1,25 @@
-import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router";
+import type { ReactNode } from 'react'
+import { Link, NavLink } from 'react-router'
 
-import { useMe } from "../lib/saved";
-import { AccountMenu } from "./AccountMenu";
+import { useMe } from '../lib/saved'
+import { AccountMenu } from './AccountMenu'
 
 const NAV = [
-  { to: "/", label: "Search", end: true },
-  { to: "/explore", label: "Explore by level", end: false },
-  { to: "/guide", label: "Your first PR", end: false },
-];
+  { to: '/', label: 'Search', end: true },
+  { to: '/explore', label: 'Explore by level', end: false },
+  { to: '/guide', label: 'Your first PR', end: false },
+]
 
-const SIGNED_IN_NAV = [{ to: "/my-issues", label: "My issues", end: false }];
+const SIGNED_IN_NAV = [
+  { to: '/for-you', label: 'For you', end: false },
+  { to: '/my-issues', label: 'My issues', end: false },
+]
 
 /** Brand, site navigation and account; `aside` is page-specific text such as sync freshness. */
 export const SiteHeader = ({ aside }: { aside?: ReactNode }) => {
-  const me = useMe();
-  const links = me.data ? [...NAV, ...SIGNED_IN_NAV] : NAV;
+  const me = useMe()
+  const links = me.data ? [...NAV, ...SIGNED_IN_NAV] : NAV
+
   return (
     <header className="py-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
@@ -32,8 +36,8 @@ export const SiteHeader = ({ aside }: { aside?: ReactNode }) => {
                     end={end}
                     className={({ isActive }) =>
                       isActive
-                        ? "font-semibold text-ink underline decoration-2 underline-offset-4"
-                        : "text-muted hover:text-ink"
+                        ? 'font-semibold text-ink underline decoration-2 underline-offset-4'
+                        : 'text-muted hover:text-ink'
                     }
                   >
                     {label}
@@ -47,5 +51,5 @@ export const SiteHeader = ({ aside }: { aside?: ReactNode }) => {
       </div>
       {aside && <p className="mt-2 text-sm text-muted">{aside}</p>}
     </header>
-  );
-};
+  )
+}

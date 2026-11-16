@@ -221,6 +221,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/recommended": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recommended Issues */
+        get: operations["recommended_issues_api_v1_me_recommended_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/profile/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Profile
+         * @description Read public repos and merged PRs again (also for accounts made before this existed).
+         */
+        post: operations["refresh_profile_api_v1_me_profile_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -391,6 +428,13 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** LanguageShare */
+        LanguageShare: {
+            /** Name */
+            name: string;
+            /** Share */
+            share: number;
+        };
         /** LevelSummary */
         LevelSummary: {
             /**
@@ -411,6 +455,66 @@ export interface components {
             name: string | null;
             /** Avatar Url */
             avatar_url: string | null;
+        };
+        /** RecommendedIssue */
+        RecommendedIssue: {
+            /** Id */
+            id: number;
+            /** Number */
+            number: number;
+            /** Title */
+            title: string;
+            /** Body Excerpt */
+            body_excerpt: string;
+            /** Html Url */
+            html_url: string;
+            /** Labels */
+            labels: string[];
+            /** Comments Count */
+            comments_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Is Available */
+            is_available: boolean;
+            /** Unavailable Reason */
+            unavailable_reason: string | null;
+            /** Difficulty Label */
+            difficulty_label: ("easy" | "medium" | "hard") | null;
+            /** Level */
+            level: ("new" | "some" | "experienced") | null;
+            /** Kind */
+            kind: ("docs" | "tests" | "translation" | "performance" | "bug" | "feature" | "other") | null;
+            repo: components["schemas"]["RepoSummary"];
+            score_breakdown: components["schemas"]["ScoreBreakdown"];
+            /** Match */
+            match: number;
+            /** Match Reasons */
+            match_reasons: string[];
+        };
+        /** RecommendedPage */
+        RecommendedPage: {
+            profile: components["schemas"]["SkillProfile"] | null;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "new" | "some" | "experienced";
+            /** Items */
+            items: components["schemas"]["RecommendedIssue"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
         };
         /** RepoSummary */
         RepoSummary: {
@@ -467,6 +571,28 @@ export interface components {
         ScoreBreakdown: {
             difficulty: components["schemas"]["DifficultyBreakdown"];
             health: components["schemas"]["HealthBreakdown"];
+        };
+        /**
+         * SkillProfile
+         * @description What FirstPR guessed from public GitHub activity, shown back so it can be judged.
+         */
+        SkillProfile: {
+            /** Languages */
+            languages: components["schemas"]["LanguageShare"][];
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "new" | "some" | "experienced";
+            /** Merged Prs */
+            merged_prs: number;
+            /** Repos Counted */
+            repos_counted: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** Stats */
         Stats: {
@@ -943,6 +1069,105 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    recommended_issues_api_v1_me_recommended_get: {
+        parameters: {
+            query?: {
+                /** @description Defaults to the inferred level */
+                level?: ("new" | "some" | "experienced") | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecommendedPage"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    refresh_profile_api_v1_me_profile_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillProfile"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

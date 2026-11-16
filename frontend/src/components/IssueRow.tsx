@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import type { Issue } from '../api/client'
@@ -7,7 +8,8 @@ import { DifficultyMeter } from './DifficultyMeter'
 
 const MAX_LABELS = 4
 
-export const IssueRow = ({ issue }: { issue: Issue }) => {
+/** `note` is an extra line under the labels, e.g. why it was recommended. */
+export const IssueRow = ({ issue, note }: { issue: Issue; note?: ReactNode }) => {
   const { repo } = issue
   const { health } = issue.score_breakdown
   const extraLabels = issue.labels.length - MAX_LABELS
@@ -49,6 +51,7 @@ export const IssueRow = ({ issue }: { issue: Issue }) => {
           ))}
           {extraLabels > 0 && <li className="px-1 py-0.5 text-xs text-muted">+{extraLabels} more</li>}
         </ul>
+        {note}
       </div>
 
       <div className="flex flex-row flex-wrap items-center gap-x-5 gap-y-1 sm:flex-col sm:items-start sm:gap-2 sm:pt-6">

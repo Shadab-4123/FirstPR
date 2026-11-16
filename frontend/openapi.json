@@ -715,6 +715,158 @@
           }
         }
       }
+    },
+    "/api/v1/me/recommended": {
+      "get": {
+        "tags": [
+          "for you"
+        ],
+        "summary": "Recommended Issues",
+        "operationId": "recommended_issues_api_v1_me_recommended_get",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "new",
+                    "some",
+                    "experienced"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Defaults to the inferred level",
+              "title": "Level"
+            },
+            "description": "Defaults to the inferred level"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendedPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/me/profile/refresh": {
+      "post": {
+        "tags": [
+          "for you"
+        ],
+        "summary": "Refresh Profile",
+        "description": "Read public repos and merged PRs again (also for accounts made before this existed).",
+        "operationId": "refresh_profile_api_v1_me_profile_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1264,6 +1416,24 @@
         ],
         "title": "IssuePage"
       },
+      "LanguageShare": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "share": {
+            "type": "number",
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "share"
+        ],
+        "title": "LanguageShare"
+      },
       "LevelSummary": {
         "properties": {
           "level": {
@@ -1331,6 +1501,209 @@
           "avatar_url"
         ],
         "title": "Me"
+      },
+      "RecommendedIssue": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body_excerpt": {
+            "type": "string",
+            "title": "Body Excerpt"
+          },
+          "html_url": {
+            "type": "string",
+            "title": "Html Url"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "comments_count": {
+            "type": "integer",
+            "title": "Comments Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "difficulty_label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Label"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "new",
+                  "some",
+                  "experienced"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "docs",
+                  "tests",
+                  "translation",
+                  "performance",
+                  "bug",
+                  "feature",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "repo": {
+            "$ref": "#/components/schemas/RepoSummary"
+          },
+          "score_breakdown": {
+            "$ref": "#/components/schemas/ScoreBreakdown"
+          },
+          "match": {
+            "type": "number",
+            "title": "Match"
+          },
+          "match_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Match Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "title",
+          "body_excerpt",
+          "html_url",
+          "labels",
+          "comments_count",
+          "created_at",
+          "updated_at",
+          "is_available",
+          "unavailable_reason",
+          "difficulty_label",
+          "level",
+          "kind",
+          "repo",
+          "score_breakdown",
+          "match",
+          "match_reasons"
+        ],
+        "title": "RecommendedIssue"
+      },
+      "RecommendedPage": {
+        "properties": {
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "new",
+              "some",
+              "experienced"
+            ],
+            "title": "Level"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecommendedIssue"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "level",
+          "items",
+          "page",
+          "page_size",
+          "total"
+        ],
+        "title": "RecommendedPage"
       },
       "RepoSummary": {
         "properties": {
@@ -1489,6 +1862,49 @@
           "health"
         ],
         "title": "ScoreBreakdown"
+      },
+      "SkillProfile": {
+        "properties": {
+          "languages": {
+            "items": {
+              "$ref": "#/components/schemas/LanguageShare"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "new",
+              "some",
+              "experienced"
+            ],
+            "title": "Level"
+          },
+          "merged_prs": {
+            "type": "integer",
+            "title": "Merged Prs"
+          },
+          "repos_counted": {
+            "type": "integer",
+            "title": "Repos Counted"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "languages",
+          "level",
+          "merged_prs",
+          "repos_counted",
+          "updated_at"
+        ],
+        "title": "SkillProfile",
+        "description": "What FirstPR guessed from public GitHub activity, shown back so it can be judged."
       },
       "Stats": {
         "properties": {

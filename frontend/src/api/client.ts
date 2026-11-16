@@ -9,6 +9,8 @@ export type LevelSummary = components['schemas']['LevelSummary']
 export type Me = components['schemas']['Me']
 export type SavedIssue = components['schemas']['SavedIssueOut']
 export type SavedStatus = SavedIssue['status']
+export type RecommendedPage = components['schemas']['RecommendedPage']
+export type SkillProfile = components['schemas']['SkillProfile']
 export type IssueQuery = NonNullable<operations['list_issues_api_v1_issues_get']['parameters']['query']>
 export type Difficulty = NonNullable<IssueQuery['difficulty']>[number]
 export type SortKey = NonNullable<IssueQuery['sort']>
@@ -48,7 +50,7 @@ const getJson = async <T>(path: string, query: Record<string, unknown> = {}): Pr
 }
 
 /** PUT/DELETE with a JSON body; the session cookie rides along (same origin). */
-const send = async <T>(method: 'PUT' | 'DELETE', path: string, body?: unknown): Promise<T | null> => {
+const send = async <T>(method: 'PUT' | 'POST' | 'DELETE', path: string, body?: unknown): Promise<T | null> => {
   const response = await fetch(`${BASE}/api/v1${path}`, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -85,6 +87,9 @@ export const api = {
   setSaved: (issueId: number, status: SavedStatus) =>
     send<SavedIssue>('PUT', `/me/saved/${issueId}`, { status }) as Promise<SavedIssue>,
   unsave: (issueId: number) => send<null>('DELETE', `/me/saved/${issueId}`),
+  recommended: (query: { level?: Level; page?: number }) => getJson<RecommendedPage>('/me/recommended', query),
+  /** Re-read public repos and merged PRs on GitHub. */
+  refreshProfile: () => send<SkillProfile>('POST', '/me/profile/refresh') as Promise<SkillProfile>,
   logout: async () => {
     await fetch(`${BASE}/api/v1/auth/logout`, { method: 'POST' })
   },

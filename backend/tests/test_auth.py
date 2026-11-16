@@ -15,6 +15,7 @@ from app.core.config import get_settings
 from app.db.models import User, UserSession
 from app.db.session import get_db
 from app.main import app
+from app.skills.github import API
 
 PROFILE = {"id": 4242, "login": "octo-newbie", "name": "Octo", "avatar_url": "https://a/x.png"}
 
@@ -147,3 +148,30 @@ def test_sign_in_not_configured_is_a_clear_503(client, monkeypatch):
     body = resp.json()["error"]
     assert resp.status_code == 503 and body["code"] == "unavailable"
     assert "isn't configured" in body["message"]
+
+
+@respx.mock
+def test_sign_in_reads_languages_and_level(client, db_session_factory):
+    _, state = _start_login(client)
+    _mock_github()
+    respx.get(f"{API}/users/octo-newbie/repos").respond(
+        200, json=[{"language": "Go", "pushed_at": "2026-11-01T00:00:00Z", "fork": False}])
+    respx.get(f"{API}/search/issues").respond(200, json={"total_count": 0})
+    client.get("/api/v1/auth/github/callback", params={"code": "c", "state": state})
+    with db_session_factory() as db:
+        user = db.execute(select(User)).scalar_one()
+    assert user.skills["languages"][0]["name"] == "Go" and user.skills["level"] == "new"
+    assert user.skills_updated_at is not None
+
+
+@respx.mock
+def test_sign_in_still_works_when_github_activity_fails(client, db_session_factory):
+    _, state = _start_login(client)
+    _mock_github()
+    respx.get(f"{API}/users/octo-newbie/repos").respond(500)
+    respx.get(f"{API}/search/issues").respond(200, json={"total_count": 0})
+    resp = client.get("/api/v1/auth/github/callback", params={"code": "c", "state": state})
+    assert resp.status_code == 302 and COOKIE_NAME in client.cookies
+    assert client.get("/api/v1/auth/me").status_code == 200
+    with db_session_factory() as db:
+        assert db.execute(select(User)).scalar_one().skills is None

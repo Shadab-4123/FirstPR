@@ -7,9 +7,11 @@
               token encrypted, and sets the session cookie.
 
 No scopes are requested: public profile and public repos are all FirstPR reads.
+At sign-in the public repos are read once to guess languages and level (app/skills).
 """
 
 import base64
+import logging
 import secrets
 from datetime import UTC, datetime
 from typing import Annotated
@@ -27,6 +29,9 @@ from app.auth.sessions import COOKIE_NAME, SESSION_DAYS, OptionalUser, create_se
 from app.core.config import Settings, get_settings
 from app.db.models import User
 from app.db.session import get_db
+from app.skills.github import refresh_skills
+
+log = logging.getLogger("firstpr.auth")
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -121,7 +126,20 @@ async def callback(
         if not user_resp.is_success:
             raise HTTPException(502, "Couldn't read your GitHub profile. Please try again.")
         profile = user_resp.json()
+        user_id = _store_user(db, profile, token)
+        try:  # nice to have: never let it block signing in
+            await refresh_skills(db, http, user_id, token, profile["login"])
+        except Exception as exc:  # noqa: BLE001
+            db.rollback()
+            log.warning("skill inference failed at sign-in", extra={"error": repr(exc)})
 
+    response = _finish(next_path)
+    response.set_cookie(COOKIE_NAME, create_session(db, user_id),
+                        max_age=SESSION_DAYS * 24 * 3600, **_cookie_kwargs())
+    return response
+
+
+def _store_user(db: Session, profile: dict, token: str) -> int:
     values = {"github_id": profile["id"], "login": profile["login"], "name": profile.get("name"),
               "avatar_url": profile.get("avatar_url"),
               "access_token_encrypted": encrypt_token(token), "last_login_at": datetime.now(UTC)}
@@ -133,11 +151,7 @@ async def callback(
         ).returning(User.id)
     ).scalar_one()
     db.commit()
-
-    response = _finish(next_path)
-    response.set_cookie(COOKIE_NAME, create_session(db, user_id),
-                        max_age=SESSION_DAYS * 24 * 3600, **_cookie_kwargs())
-    return response
+    return user_id
 
 
 def _finish(path: str) -> RedirectResponse:

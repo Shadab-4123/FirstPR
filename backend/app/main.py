@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_error_handlers
+from app.api.foryou import router as foryou_router
 from app.api.routes import router
 from app.api.saved import router as saved_router
 from app.auth.routes import router as auth_router
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(router)
     app.include_router(auth_router)
     app.include_router(saved_router)
+    app.include_router(foryou_router)
     return app
 
 
