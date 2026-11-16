@@ -16,8 +16,10 @@ it('groups saved issues in journey order and flags what changed on GitHub', asyn
   mockApi({ 'GET /api/v1/auth/me': SIGNED_IN, 'GET /api/v1/me/saved': { body: saved } })
   renderPage(<MyIssuesPage />)
 
+  // Every column is shown, empty ones too, so you can see where an issue goes next.
   const headings = await screen.findAllByRole('heading', { level: 2 })
-  expect(headings.map((h) => h.firstChild?.textContent)).toEqual(['Saved', 'PR opened', 'Merged'])
+  expect(headings.map((h) => h.firstChild?.textContent)).toEqual(['Saved', 'Working on it', 'PR opened', 'Merged'])
+  expect(screen.getByRole('heading', { name: /Working on it/ }).closest('section')).toHaveTextContent('Nothing here yet')
   expect(screen.getByText('1 saved · 1 PR opened · 1 merged')).toBeInTheDocument()
   expect(screen.getByText('Closed on GitHub. If your PR was merged, mark it Merged.')).toBeInTheDocument()
   expect(screen.getByText('Someone else may have picked this up.')).toBeInTheDocument()

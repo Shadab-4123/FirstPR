@@ -1,7 +1,8 @@
 import type { SavedStatus } from '../api/client'
 import { STATUSES } from '../lib/saved'
+import { CheckIcon } from './icons'
 
-/** The four steps as a radio group: one click moves an issue along. */
+/** The four steps as a numbered radio group: one click moves an issue along. */
 export const StatusPicker = ({
   value,
   onChange,
@@ -15,26 +16,47 @@ export const StatusPicker = ({
 }) => (
   <fieldset disabled={disabled} className="disabled:opacity-60">
     <legend className="sr-only">Your progress</legend>
-    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-2">
-      {STATUSES.map((status) => (
-        <label
-          key={status.value}
-          title={status.hint}
-          className="cursor-pointer rounded-md border border-rule bg-white px-2.5 py-1.5 text-center text-sm
-            has-checked:border-ink has-checked:bg-ink has-checked:font-semibold has-checked:text-white
-            has-focus-visible:outline-2 has-focus-visible:outline-link hover:border-ink"
-        >
-          <input
-            type="radio"
-            name={name}
-            value={status.value}
-            checked={value === status.value}
-            onChange={() => onChange(status.value)}
-            className="sr-only"
-          />
-          {status.label}
-        </label>
-      ))}
-    </div>
+    <ol className="space-y-2">
+      {STATUSES.map((status, i) => {
+        const checked = value === status.value
+        const hintId = `${name}-${status.value}-hint`
+        return (
+          <li
+            key={status.value}
+            className={`relative flex items-center gap-3 rounded-xl border px-3 py-2.5 transition
+              has-focus-visible:outline-2 has-focus-visible:outline-link ${
+                checked ? 'border-link-line bg-link-soft' : 'border-transparent bg-well/70 hover:border-rule-strong'
+              }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
+                checked ? 'bg-link text-white' : 'bg-white text-muted'
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className="min-w-0 flex-1">
+              <label className={`block cursor-pointer text-sm font-semibold after:absolute after:inset-0 ${checked ? 'text-link' : 'text-ink'}`}>
+                <input
+                  type="radio"
+                  name={name}
+                  value={status.value}
+                  checked={checked}
+                  onChange={() => onChange(status.value)}
+                  aria-describedby={hintId}
+                  className="sr-only"
+                />
+                {status.label}
+              </label>
+              <span id={hintId} className="block text-xs text-muted">
+                {status.hint}
+              </span>
+            </span>
+            {checked && <CheckIcon className="size-4 text-link" />}
+          </li>
+        )
+      })}
+    </ol>
   </fieldset>
 )

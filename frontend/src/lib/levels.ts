@@ -46,3 +46,25 @@ export const isLevel = (value: string | undefined): value is Level =>
 
 /** Display name for a kind coming from the API (falls back to the raw value). */
 export const kindLabel = (value: string): string => KIND_LABELS[value as Kind] ?? value
+
+/** Each level's colour: top rule, badge, bar and button. */
+export const LEVEL_LOOK: Record<Level, { rule: string; badge: string; bar: string; button: string }> = {
+  new: {
+    rule: 'border-t-easy-dot',
+    badge: 'bg-easy-soft text-easy',
+    bar: 'bg-easy',
+    button: 'bg-easy hover:bg-[#065f46]',
+  },
+  some: {
+    rule: 'border-t-medium-dot',
+    badge: 'bg-medium-soft text-medium',
+    bar: 'bg-medium',
+    button: 'bg-medium hover:bg-[#92400e]',
+  },
+  experienced: {
+    rule: 'border-t-link',
+    badge: 'bg-link-soft text-link',
+    bar: 'bg-link',
+    button: 'bg-link hover:bg-link-hover',
+  },
+}

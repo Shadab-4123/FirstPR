@@ -4,9 +4,11 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router'
 import { api, type Kind, type Level } from '../api/client'
 import { IssueRow } from '../components/IssueRow'
 import { Pagination } from '../components/Pagination'
-import { ErrorState, ResultsSkeleton } from '../components/ResultStates'
-import { SiteHeader } from '../components/SiteHeader'
-import { KIND_LABELS, LEVEL_INFO, isLevel, kindLabel } from '../lib/levels'
+import { ArrowRightIcon, BookIcon, CheckCircleIcon } from '../components/icons'
+import { ErrorState, Notice, ResultsSkeleton } from '../components/ResultStates'
+import { PageLayout } from '../components/SiteHeader'
+import { btnPrimary, card } from '../components/ui'
+import { KIND_LABELS, LEVEL_INFO, LEVEL_LOOK, LEVELS, isLevel, kindLabel } from '../lib/levels'
 
 const PAGE_SIZE = 20
 
@@ -42,50 +44,64 @@ const LevelIssues = ({ level }: { level: Level }) => {
   }
   const total = issues.data?.total ?? 0
 
+  const step = LEVELS.indexOf(level) + 1
+  const look = LEVEL_LOOK[level]
+
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-8">
-      <SiteHeader />
-      <main className="pt-2 sm:pt-4">
-        <Link to="/explore" className="text-sm text-link hover:underline">
-          ← All levels
-        </Link>
-        <h1 className="mt-6 font-display text-3xl font-semibold sm:text-4xl">{info.title}</h1>
-        <p className="mt-2 max-w-prose">{info.who}</p>
-        <p className="mt-1 max-w-prose text-sm text-muted">{info.what}</p>
+    <PageLayout>
+      <Link to="/explore" className="inline-flex items-center gap-1.5 text-sm font-semibold text-link hover:underline">
+        ← All levels
+      </Link>
 
-        {level === 'new' && <GuideCallout />}
+      <header className={`${card} mt-4 flex flex-wrap items-start justify-between gap-4 border-t-4 p-6 sm:p-8 ${look.rule}`}>
+        <div className="max-w-2xl">
+          <span className={`rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold tracking-wide uppercase ${look.badge}`}>
+            Level 0{step}
+          </span>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink sm:text-4xl">{info.title}</h1>
+          <p className="mt-2 text-lg text-body">{info.who}</p>
+          <p className="mt-1 text-sm text-muted">{info.what}</p>
+        </div>
+        {summary && (
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-white px-3 py-1 text-sm font-semibold text-ink">
+            <CheckCircleIcon className="size-4 text-easy" />
+            {summary.total.toLocaleString()} open, unclaimed issues
+          </p>
+        )}
+      </header>
 
-        <nav aria-label="Kind of work" className="mt-8 border-b-2 border-ink pb-3">
-          <ul className="flex flex-wrap gap-2">
-            <KindChip label="Everything" count={summary?.total} active={!kind} onClick={() => choose({ kind: undefined })} />
-            {summary?.kinds.map((k) => (
-              <KindChip
-                key={k.value}
-                label={kindLabel(k.value)}
-                count={k.count}
-                active={kind === k.value}
-                onClick={() => choose({ kind: k.value as Kind })}
-              />
-            ))}
-          </ul>
-        </nav>
+      {level === 'new' && <GuideCallout />}
 
+      <nav aria-label="Kind of work" className="mt-8">
+        <p className="mb-2 text-xs font-semibold tracking-wider text-muted uppercase">Filter by kind of work</p>
+        <ul className="flex flex-wrap gap-2">
+          <KindChip label="Everything" count={summary?.total} active={!kind} onClick={() => choose({ kind: undefined })} />
+          {summary?.kinds.map((k) => (
+            <KindChip
+              key={k.value}
+              label={kindLabel(k.value)}
+              count={k.count}
+              active={kind === k.value}
+              onClick={() => choose({ kind: k.value as Kind })}
+            />
+          ))}
+        </ul>
+      </nav>
+
+      <div className="mt-6">
         {issues.isPending ? (
           <ResultsSkeleton />
         ) : issues.isError ? (
           <ErrorState message={issues.error.message} onRetry={() => issues.refetch()} />
         ) : total === 0 ? (
-          <div className="py-16">
-            <p className="font-display text-2xl font-medium">Nothing here yet.</p>
-            <p className="mt-2 max-w-prose text-muted">
-              {level === 'experienced'
-                ? 'Experienced-level issues come from "help wanted" labels and bugs in big projects, which the daily sync is starting to collect. Check back tomorrow.'
-                : 'Try another kind of work, or another level.'}
-            </p>
-          </div>
+          <Notice title="Nothing here yet.">
+            {level === 'experienced'
+              ? 'Experienced-level issues come from "help wanted" labels and bugs in big projects, which the daily sync is starting to collect. Check back tomorrow.'
+              : 'Try another kind of work, or another level.'}
+          </Notice>
         ) : (
           <>
-            <ul className={issues.isPlaceholderData ? 'opacity-60' : undefined}>
+            <ul className={`space-y-4 transition-opacity ${issues.isPlaceholderData ? 'opacity-60' : ''}`}>
               {issues.data.items.map((issue) => (
                 <IssueRow key={issue.id} issue={issue} />
               ))}
@@ -101,8 +117,8 @@ const LevelIssues = ({ level }: { level: Level }) => {
             />
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </PageLayout>
   )
 }
 
@@ -114,24 +130,36 @@ const KindChip = ({ label, count, active, onClick }: KindChipProps) => (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-sm ${
-        active ? 'border-ink bg-ink text-white' : 'border-rule bg-white hover:border-ink'
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
+        active ? 'border-link bg-link text-white' : 'border-rule bg-white text-body hover:border-link-line hover:text-link'
       }`}
     >
       {label}
-      {count !== undefined && <span className={active ? 'ml-1.5 text-white/70' : 'ml-1.5 text-muted'}>{count}</span>}
+      {count !== undefined && (
+        <span
+          className={`rounded-full px-1.5 font-mono text-[0.7rem] ${active ? 'bg-white/20 text-white' : 'bg-well text-muted'}`}
+        >
+          {count}
+        </span>
+      )}
     </button>
   </li>
 )
 
 const GuideCallout = () => (
-  <aside className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-link/30 bg-link/5 px-5 py-4">
-    <div>
-      <p className="font-semibold">First time? Start with the guide.</p>
-      <p className="text-sm text-muted">Six steps from picking an issue to opening your pull request.</p>
+  <aside className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-link-line/40 bg-gradient-to-r from-link-soft to-easy-soft p-5">
+    <div className="flex items-center gap-4">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-white text-link shadow-card">
+        <BookIcon className="size-5" />
+      </span>
+      <div>
+        <p className="font-semibold text-ink">First time? Start with the guide.</p>
+        <p className="text-sm text-muted">Six steps from picking an issue to opening your pull request.</p>
+      </div>
     </div>
-    <Link to="/guide" className="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white hover:bg-link">
+    <Link to="/guide" className={btnPrimary}>
       Read the guide
+      <ArrowRightIcon />
     </Link>
   </aside>
 )

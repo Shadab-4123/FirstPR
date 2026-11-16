@@ -1,8 +1,11 @@
 import { Link } from 'react-router'
 
 import { signInUrl, type SavedIssue, type SavedStatus } from '../api/client'
-import { SiteHeader } from '../components/SiteHeader'
-import { timeAgo } from '../lib/format'
+import { AlertIcon, ExternalIcon } from '../components/icons'
+import { Notice } from '../components/ResultStates'
+import { PageLayout } from '../components/SiteHeader'
+import { btnPrimary, card } from '../components/ui'
+import { compactNumber, timeAgo } from '../lib/format'
 import { STATUSES, useMe, useSaved, useSavedActions } from '../lib/saved'
 
 /** Your saved issues, grouped by how far you've got. */
@@ -11,64 +14,87 @@ export const MyIssuesPage = () => {
   const saved = useSaved()
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-8">
-      <SiteHeader />
-      <main className="pt-8 sm:pt-14">
-        <h1 className="font-display text-3xl leading-tight font-semibold sm:text-4xl">My issues</h1>
-        {me.isPending || (me.data && saved.isPending) ? (
-          <ListSkeleton />
-        ) : !me.data ? (
-          <SignedOut />
-        ) : saved.isError ? (
-          <div role="alert" className="py-10">
-            <p className="font-display text-xl font-medium">Your issues couldn't be loaded.</p>
-            <p className="mt-2 text-muted">{saved.error.message}</p>
-            <button
-              type="button"
-              onClick={() => saved.refetch()}
-              className="mt-4 rounded-md bg-ink px-4 py-2 font-semibold text-white hover:bg-link"
-            >
-              Try again
-            </button>
-          </div>
-        ) : !saved.data?.length ? (
-          <Empty />
-        ) : (
-          <Groups items={saved.data} />
-        )}
-      </main>
-    </div>
+    <PageLayout>
+      <h1 className="text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl">My issues</h1>
+      {me.isPending || (me.data && saved.isPending) ? (
+        <ListSkeleton />
+      ) : !me.data ? (
+        <SignedOut />
+      ) : saved.isError ? (
+        <div className="mt-6">
+          <Notice
+            alert
+            title="Your issues couldn't be loaded."
+            action={
+              <button type="button" onClick={() => saved.refetch()} className={btnPrimary}>
+                Try again
+              </button>
+            }
+          >
+            {saved.error.message}
+          </Notice>
+        </div>
+      ) : !saved.data?.length ? (
+        <Empty />
+      ) : (
+        <Groups items={saved.data} />
+      )}
+    </PageLayout>
   )
+}
+
+/** Column colours, in journey order. */
+const COLUMN_LOOK: Record<SavedStatus, { dot: string; count: string; frame: string }> = {
+  saved: { dot: 'bg-muted', count: 'bg-well text-body', frame: 'bg-well/50' },
+  working: { dot: 'bg-link', count: 'bg-link-soft text-link', frame: 'bg-link-soft/40' },
+  pr_opened: { dot: 'bg-medium-dot', count: 'bg-medium-soft text-medium', frame: 'bg-medium-soft/50' },
+  merged: { dot: 'bg-easy-dot', count: 'bg-easy-soft text-easy', frame: 'bg-easy-soft/50' },
 }
 
 const Groups = ({ items }: { items: SavedIssue[] }) => {
   const groups = STATUSES.map((status) => ({ ...status, items: items.filter((i) => i.status === status.value) }))
   return (
     <>
-      <p className="mt-3 text-muted">
+      <p className="mt-2 text-muted">
         {groups
           .filter((g) => g.items.length > 0)
           .map((g) => `${g.items.length} ${g.counted}`)
           .join(' · ')}
       </p>
-      {groups
-        .filter((g) => g.items.length > 0)
-        .map((group) => (
-          <section key={group.value} aria-labelledby={`group-${group.value}`} className="mt-10">
-            <h2
-              id={`group-${group.value}`}
-              className="flex items-baseline gap-3 border-b-2 border-ink pb-2 font-display text-xl font-semibold"
+      <div className="mt-8 grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {groups.map((group) => {
+          const look = COLUMN_LOOK[group.value]
+          return (
+            <section
+              key={group.value}
+              aria-labelledby={`group-${group.value}`}
+              className={`rounded-2xl p-3 ${look.frame}`}
             >
-              {group.label}
-              <span className="text-sm font-normal text-muted">{group.hint}</span>
-            </h2>
-            <ul>
-              {group.items.map((item) => (
-                <SavedRow key={item.issue.id} item={item} />
-              ))}
-            </ul>
-          </section>
-        ))}
+              <h2 id={`group-${group.value}`} className="flex items-center gap-2 px-2 pt-1 font-semibold text-ink">
+                {group.label}
+                <span aria-hidden="true" className={`size-2 rounded-full ${look.dot}`} />
+                <span className={`ml-auto rounded-full px-2 text-xs font-semibold ${look.count}`}>
+                  <span className="sr-only">(</span>
+                  {group.items.length}
+                  <span className="sr-only">)</span>
+                </span>
+              </h2>
+              <p className="px-2 pb-3 text-xs text-muted">{group.hint}</p>
+              {group.items.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-rule-strong px-3 py-6 text-center text-xs text-muted">
+                  Nothing here yet
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {group.items.map((item) => (
+                    <SavedRow key={item.issue.id} item={item} />
+                  ))}
+                </ul>
+              )}
+            </section>
+          )
+        })}
+      </div>
     </>
   )
 }
@@ -79,51 +105,60 @@ const SavedRow = ({ item }: { item: SavedIssue }) => {
   const busy = setStatus.isPending || remove.isPending
   const note = statusNote(item)
   const error = setStatus.error ?? remove.error
+  const merged = item.status === 'merged'
 
   return (
-    <li className="grid gap-3 border-b border-rule py-5 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-8">
-      <div className="min-w-0">
-        <p className="text-sm text-muted">
-          <span className="font-semibold text-ink">{issue.repo.full_name}</span>
-          <span className="ml-2">#{issue.number}</span>
-          <span className="ml-2">updated here {timeAgo(item.updated_at)}</span>
+    <li className={`${card} p-4 ${merged ? 'border-easy-line' : ''}`}>
+      <p className="truncate font-mono text-xs text-link" title={issue.repo.full_name}>
+        {issue.repo.full_name}
+      </p>
+      <p className="mt-0.5 text-xs text-muted">
+        ★ {compactNumber(issue.repo.stars)}
+        {issue.repo.language && ` · ${issue.repo.language}`} · updated {timeAgo(item.updated_at)}
+      </p>
+      <h3 className="mt-2 leading-snug font-semibold text-pretty text-ink">
+        <Link to={`/issues/${issue.id}`} className="hover:text-link hover:underline">
+          {issue.title}
+        </Link>{' '}
+        <span className="text-sm font-normal text-muted">#{issue.number}</span>
+      </h3>
+      {note && (
+        <p className="mt-2 flex gap-1.5 rounded-lg bg-medium-soft px-2.5 py-1.5 text-xs text-medium">
+          <AlertIcon className="mt-px size-3.5" />
+          <span>{note}</span>
         </p>
-        <h3 className="mt-1 font-display text-lg leading-snug font-medium text-pretty">
-          <Link to={`/issues/${issue.id}`} className="hover:text-link hover:underline">
-            {issue.title}
-          </Link>
-        </h3>
-        {note && <p className="mt-1.5 text-sm text-medium">{note}</p>}
-        {error && (
-          <p role="alert" className="mt-1.5 text-sm text-hard">
-            {error.message}
-          </p>
-        )}
-      </div>
-      <div className="flex items-center gap-4">
-        <label className="text-sm">
-          <span className="sr-only">Progress on {issue.title}</span>
-          <select
-            value={item.status}
-            disabled={busy}
-            onChange={(e) => setStatus.mutate({ issueId: issue.id, status: e.target.value as SavedStatus })}
-            className="rounded-md border border-rule bg-white px-2.5 py-1.5 disabled:opacity-60"
-          >
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <a href={issue.html_url} target="_blank" rel="noreferrer" className="text-sm text-link hover:underline">
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-hard">
+          {error.message}
+        </p>
+      )}
+      <label className="mt-3 flex items-center justify-between gap-2 text-xs text-muted">
+        Move to
+        <span className="sr-only"> (progress on {issue.title})</span>
+        <select
+          value={item.status}
+          disabled={busy}
+          onChange={(e) => setStatus.mutate({ issueId: issue.id, status: e.target.value as SavedStatus })}
+          className="rounded-lg border border-rule bg-well/60 px-2 py-1 text-xs font-semibold text-body disabled:opacity-60"
+        >
+          {STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="mt-3 flex items-center justify-between border-t border-rule pt-3 text-xs">
+        <a href={issue.html_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-link hover:underline">
+          <ExternalIcon className="size-3.5" />
           GitHub
         </a>
         <button
           type="button"
           onClick={() => remove.mutate(issue.id)}
           disabled={busy}
-          className="text-sm text-muted hover:text-ink disabled:opacity-50"
+          className="text-muted hover:text-hard disabled:opacity-50"
         >
           Remove
         </button>
@@ -142,39 +177,40 @@ const statusNote = ({ status, issue_state, issue }: SavedIssue): string | null =
 }
 
 const SignedOut = () => (
-  <div className="py-10">
-    <p className="max-w-prose text-muted">
-      Sign in to save issues and track each one from first look to merged pull request.
-    </p>
-    <a
-      href={signInUrl('/my-issues')}
-      className="mt-5 inline-block rounded-md bg-ink px-4 py-2 font-semibold text-white hover:bg-link"
+  <div className="mt-6">
+    <Notice
+      title="Sign in to keep track of your issues"
+      action={
+        <a href={signInUrl('/my-issues')} className={btnPrimary}>
+          Sign in with GitHub
+        </a>
+      }
     >
-      Sign in with GitHub
-    </a>
+      Save issues and track each one from first look to merged pull request.
+    </Notice>
   </div>
 )
 
 const Empty = () => (
-  <div className="py-10">
-    <p className="font-display text-xl font-medium">Nothing saved yet.</p>
-    <p className="mt-2 max-w-prose text-muted">
-      Open any issue and press <strong>Save to My issues</strong>. Then mark it as you go: working on it, PR
-      opened, merged.
-    </p>
-    <Link to="/explore" className="mt-5 inline-block rounded-md bg-ink px-4 py-2 font-semibold text-white hover:bg-link">
-      Find an issue
-    </Link>
+  <div className="mt-6">
+    <Notice
+      title="Nothing saved yet."
+      action={
+        <Link to="/explore" className={btnPrimary}>
+          Find an issue
+        </Link>
+      }
+    >
+      Open any issue and press <strong>Save to My issues</strong>. Then mark it as you go: working on it, PR opened,
+      merged.
+    </Notice>
   </div>
 )
 
 const ListSkeleton = () => (
-  <div aria-hidden="true" className="mt-10 animate-pulse space-y-6">
-    {[0, 1, 2].map((i) => (
-      <div key={i} className="space-y-2">
-        <div className="h-3.5 w-40 rounded bg-rule" />
-        <div className="h-6 w-3/4 rounded bg-rule/70" />
-      </div>
+  <div aria-hidden="true" className="mt-8 grid animate-pulse gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {[0, 1, 2, 3].map((i) => (
+      <div key={i} className="h-48 rounded-2xl bg-well" />
     ))}
   </div>
 )

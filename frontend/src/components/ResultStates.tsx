@@ -1,41 +1,61 @@
+import type { ReactNode } from 'react'
+
+import { btnPrimary, card } from './ui'
+
 export const ResultsSkeleton = () => (
-  <ul aria-hidden="true" className="animate-pulse">
-    {Array.from({ length: 5 }, (_, i) => (
-      <li key={i} className="space-y-3 border-b border-rule py-6">
-        <div className="h-3.5 w-48 rounded bg-rule" />
-        <div className="h-5 w-3/4 rounded bg-rule" />
-        <div className="h-3.5 w-2/3 rounded bg-rule/70" />
+  <ul aria-hidden="true" className="animate-pulse space-y-4">
+    {Array.from({ length: 4 }, (_, i) => (
+      <li key={i} className={`${card} space-y-3 p-6`}>
+        <div className="h-3 w-48 rounded-full bg-well" />
+        <div className="h-5 w-3/4 rounded-full bg-well" />
+        <div className="h-3 w-2/3 rounded-full bg-well/70" />
       </li>
     ))}
   </ul>
 )
 
-export const EmptyState = ({ onReset }: { onReset: () => void }) => (
-  <div className="py-16">
-    <p className="font-display text-2xl font-medium">No open issues match all of that.</p>
-    <p className="mt-2 max-w-prose text-muted">
-      Try a different language, any size, or fewer stars. Each one widens the search.
-    </p>
-    <button
-      type="button"
-      onClick={onReset}
-      className="mt-5 rounded-md bg-ink px-4 py-2 font-semibold text-white hover:bg-link"
-    >
-      Clear filters
-    </button>
+/** A friendly box for "nothing here" and "something broke", with one action. */
+export const Notice = ({
+  title,
+  children,
+  action,
+  alert = false,
+}: {
+  title: string
+  children?: ReactNode
+  action?: ReactNode
+  alert?: boolean
+}) => (
+  <div role={alert ? 'alert' : undefined} className={`${card} px-6 py-10 text-center sm:px-10`}>
+    <p className="text-xl font-semibold text-ink">{title}</p>
+    {children && <div className="mx-auto mt-2 max-w-prose text-muted">{children}</div>}
+    {action && <div className="mt-5">{action}</div>}
   </div>
 )
 
+export const EmptyState = ({ onReset }: { onReset: () => void }) => (
+  <Notice
+    title="No open issues match all of that."
+    action={
+      <button type="button" onClick={onReset} className={btnPrimary}>
+        Clear filters
+      </button>
+    }
+  >
+    Try a different language, any size, or fewer stars. Each one widens the search.
+  </Notice>
+)
+
 export const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <div role="alert" className="py-16">
-    <p className="font-display text-2xl font-medium">Issues couldn't be loaded.</p>
-    <p className="mt-2 max-w-prose text-muted">{message} Check that the API is running, then try again.</p>
-    <button
-      type="button"
-      onClick={onRetry}
-      className="mt-5 rounded-md bg-ink px-4 py-2 font-semibold text-white hover:bg-link"
-    >
-      Try again
-    </button>
-  </div>
+  <Notice
+    alert
+    title="Issues couldn't be loaded."
+    action={
+      <button type="button" onClick={onRetry} className={btnPrimary}>
+        Try again
+      </button>
+    }
+  >
+    {message} Check that the API is running, then try again.
+  </Notice>
 )
