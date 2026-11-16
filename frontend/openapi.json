@@ -338,6 +338,7 @@
     "/api/v1/stats": {
       "get": {
         "summary": "Stats",
+        "description": "Everything the public stats page shows. Cached: it only changes when a sync runs.",
         "operationId": "stats_api_v1_stats_get",
         "responses": {
           "200": {
@@ -1502,6 +1503,89 @@
         ],
         "title": "Me"
       },
+      "MethodScores": {
+        "properties": {
+          "accuracy": {
+            "type": "number",
+            "title": "Accuracy"
+          },
+          "macro_f1": {
+            "type": "number",
+            "title": "Macro F1"
+          },
+          "severe_error_rate": {
+            "type": "number",
+            "title": "Severe Error Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accuracy",
+          "macro_f1",
+          "severe_error_rate"
+        ],
+        "title": "MethodScores"
+      },
+      "ModelStats": {
+        "properties": {
+          "trained_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Trained At"
+          },
+          "examples_used": {
+            "type": "integer",
+            "title": "Examples Used"
+          },
+          "test_examples": {
+            "type": "integer",
+            "title": "Test Examples"
+          },
+          "test_period": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Test Period"
+          },
+          "model": {
+            "$ref": "#/components/schemas/MethodScores"
+          },
+          "heuristic": {
+            "$ref": "#/components/schemas/MethodScores"
+          },
+          "majority": {
+            "$ref": "#/components/schemas/MethodScores"
+          },
+          "majority_predicts": {
+            "type": "string",
+            "title": "Majority Predicts"
+          },
+          "share_confident": {
+            "type": "number",
+            "title": "Share Confident"
+          },
+          "accuracy_when_confident": {
+            "type": "number",
+            "title": "Accuracy When Confident"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trained_at",
+          "examples_used",
+          "test_examples",
+          "test_period",
+          "model",
+          "heuristic",
+          "majority",
+          "majority_predicts",
+          "share_confident",
+          "accuracy_when_confident"
+        ],
+        "title": "ModelStats",
+        "description": "Test-set results from ml/results.json; the full write-up is ml/EVAL.md."
+      },
       "RecommendedIssue": {
         "properties": {
           "id": {
@@ -1929,6 +2013,63 @@
                 "type": "null"
               }
             ]
+          },
+          "last_recheck": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SyncRunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recent_runs": {
+            "items": {
+              "$ref": "#/components/schemas/SyncRunOut"
+            },
+            "type": "array",
+            "title": "Recent Runs",
+            "default": []
+          },
+          "model_scored": {
+            "type": "integer",
+            "title": "Model Scored",
+            "default": 0
+          },
+          "hidden_by_reason": {
+            "items": {
+              "$ref": "#/components/schemas/FacetCount"
+            },
+            "type": "array",
+            "title": "Hidden By Reason",
+            "default": []
+          },
+          "by_level": {
+            "items": {
+              "$ref": "#/components/schemas/FacetCount"
+            },
+            "type": "array",
+            "title": "By Level",
+            "default": []
+          },
+          "by_language": {
+            "items": {
+              "$ref": "#/components/schemas/FacetCount"
+            },
+            "type": "array",
+            "title": "By Language",
+            "default": []
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -1966,6 +2107,20 @@
           "issues_upserted": {
             "type": "integer",
             "title": "Issues Upserted"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "sync",
+              "recheck"
+            ],
+            "title": "Kind",
+            "default": "sync"
+          },
+          "issues_seen": {
+            "type": "integer",
+            "title": "Issues Seen",
+            "default": 0
           }
         },
         "type": "object",

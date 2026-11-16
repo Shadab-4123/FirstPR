@@ -100,13 +100,44 @@ class SyncRunOut(BaseModel):
     finished_at: datetime | None
     status: str
     issues_upserted: int
+    # "sync" finds new issues; "recheck" confirms stored ones are still free.
+    kind: Literal["sync", "recheck"] = "sync"
+    issues_seen: int = 0
+
+
+class MethodScores(BaseModel):
+    accuracy: float
+    macro_f1: float
+    severe_error_rate: float  # easy called hard or hard called easy; lower is better
+
+
+class ModelStats(BaseModel):
+    """Test-set results from ml/results.json; the full write-up is ml/EVAL.md."""
+
+    trained_at: datetime
+    examples_used: int
+    test_examples: int
+    test_period: list[str]  # [first day, last day]; test issues are newer than training ones
+    model: MethodScores
+    heuristic: MethodScores  # the hand-written formula used before the model
+    majority: MethodScores  # always guessing the most common size
+    majority_predicts: str
+    share_confident: float
+    accuracy_when_confident: float
 
 
 class Stats(BaseModel):
     issues_indexed: int
     issues_available: int
     repos_indexed: int
-    last_sync: SyncRunOut | None
+    last_sync: SyncRunOut | None  # last finished run that looked for new issues
+    last_recheck: SyncRunOut | None = None
+    recent_runs: list[SyncRunOut] = []  # newest first
+    model_scored: int = 0  # available issues sized by the model (the rest: heuristic)
+    hidden_by_reason: list[FacetCount] = []  # why indexed issues aren't shown as free
+    by_level: list[FacetCount] = []  # available issues
+    by_language: list[FacetCount] = []  # available issues, top languages
+    model: ModelStats | None = None
 
 
 class ErrorBody(BaseModel):

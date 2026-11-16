@@ -1,6 +1,6 @@
 import time
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, func, select, text
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.queries import IssueFilters, issue_count, issue_search
 from app.db.models import Issue, Repo, SyncRun
 from app.db.session import get_db
+from app.ml.card import load_results
 from app.schemas.issue import (
     DifficultyBreakdown,
     ErrorResponse,
@@ -19,6 +20,8 @@ from app.schemas.issue import (
     IssueOut,
     IssuePage,
     LevelSummary,
+    MethodScores,
+    ModelStats,
     RepoSummary,
     ScoreBreakdown,
     Stats,
@@ -194,21 +197,70 @@ def filter_meta(db: DB) -> FilterMeta:
     return _cached("filters", build)
 
 
+RECENT_RUNS = 14
+TOP_LANGUAGES = 8
+
+
+def _run_out(run: SyncRun) -> SyncRunOut:
+    kind: Literal["sync", "recheck"] = (
+        "recheck" if (run.query or "").startswith("recheck") else "sync"
+    )
+    return SyncRunOut(started_at=run.started_at, finished_at=run.finished_at, status=run.status,
+                      issues_upserted=run.issues_upserted, issues_seen=run.issues_seen, kind=kind)
+
+
+def _model_stats() -> ModelStats | None:
+    results = load_results()
+    if not results:
+        return None
+    bands, data = results["bands"], results["data"]
+
+    def scores(key: str) -> MethodScores:
+        return MethodScores(**{k: bands[key][k]
+                               for k in ("accuracy", "macro_f1", "severe_error_rate")})
+
+    return ModelStats(
+        trained_at=results["trained_at"], examples_used=data["used"],
+        test_examples=data["test"], test_period=data["test_period"],
+        model=scores("model"), heuristic=scores("heuristic_baseline"),
+        majority=scores("majority_class"),
+        majority_predicts=bands["majority_class"]["predicts"],
+        share_confident=results["confidence"]["share_confident"],
+        accuracy_when_confident=results["confidence"]["accuracy_when_confident"],
+    )
+
+
 @router.get("/stats", response_model=Stats)
 def stats(db: DB) -> Stats:
+    """Everything the public stats page shows. Cached: it only changes when a sync runs."""
+
     def build() -> Stats:
-        last = db.execute(
-            select(SyncRun).where(SyncRun.status == "succeeded").order_by(desc(SyncRun.id)).limit(1)
-        ).scalar_one_or_none()
+        available = (Issue.state == "open", Issue.is_available.is_(True))
+        runs = db.execute(select(SyncRun).order_by(desc(SyncRun.id)).limit(RECENT_RUNS * 4)
+                          ).scalars().all()
+        outs = [_run_out(r) for r in runs]
+        done = [o for o in outs if o.status == "succeeded"]
+
+        def facets(column, *where, limit=None) -> list[FacetCount]:
+            stmt = (select(column, func.count()).select_from(Issue).join(Repo).where(*where)
+                    .group_by(column).order_by(func.count().desc(), column))
+            if limit:
+                stmt = stmt.limit(limit)
+            return [FacetCount(value=v, count=n) for v, n in db.execute(stmt) if v]
+
         return Stats(
             issues_indexed=db.scalar(select(func.count(Issue.id))) or 0,
-            issues_available=db.scalar(
-                select(func.count(Issue.id)).where(
-                    Issue.state == "open", Issue.is_available.is_(True)
-                )
-            ) or 0,
+            issues_available=db.scalar(select(func.count(Issue.id)).where(*available)) or 0,
             repos_indexed=db.scalar(select(func.count(Repo.id))) or 0,
-            last_sync=SyncRunOut.model_validate(last) if last else None,
+            last_sync=next((o for o in done if o.kind == "sync"), None),
+            last_recheck=next((o for o in done if o.kind == "recheck"), None),
+            recent_runs=outs[:RECENT_RUNS],
+            model_scored=db.scalar(select(func.count(Issue.id)).where(
+                *available, Issue.difficulty_method == "model_v1")) or 0,
+            hidden_by_reason=facets(Issue.unavailable_reason, Issue.is_available.is_(False)),
+            by_level=facets(Issue.level, *available),
+            by_language=facets(Repo.language, *available, limit=TOP_LANGUAGES),
+            model=_model_stats(),
         )
 
     return _cached("stats", build)

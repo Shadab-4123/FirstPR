@@ -1,0 +1,117 @@
+{
+  "trained_at": "2026-11-15T18:24:37+00:00",
+  "data": {
+    "collected": 4020,
+    "dropped": {
+      "pr_within_an_hour": 679,
+      "lines_out_of_range": 50
+    },
+    "used": 3291,
+    "train": 2633,
+    "test": 658,
+    "train_period": [
+      "2024-11-30",
+      "2026-06-18"
+    ],
+    "test_period": [
+      "2026-06-18",
+      "2026-11-15"
+    ],
+    "test_band_counts": {
+      "hard": 250,
+      "easy": 157,
+      "medium": 251
+    }
+  },
+  "validation_macro_f1": {
+    "logistic_regression": 0.434,
+    "gradient_boosting": 0.386
+  },
+  "chosen_model": "logistic_regression",
+  "bands": {
+    "majority_class": {
+      "predicts": "hard",
+      "accuracy": 0.38,
+      "macro_f1": 0.184,
+      "severe_error_rate": 0.239,
+      "confusion": [
+        [
+          0,
+          0,
+          157
+        ],
+        [
+          0,
+          0,
+          251
+        ],
+        [
+          0,
+          0,
+          250
+        ]
+      ]
+    },
+    "heuristic_baseline": {
+      "accuracy": 0.304,
+      "macro_f1": 0.273,
+      "severe_error_rate": 0.225,
+      "confusion": [
+        [
+          115,
+          36,
+          6
+        ],
+        [
+          170,
+          68,
+          13
+        ],
+        [
+          142,
+          91,
+          17
+        ]
+      ]
+    },
+    "model": {
+      "accuracy": 0.406,
+      "macro_f1": 0.385,
+      "severe_error_rate": 0.144,
+      "confusion": [
+        [
+          55,
+          41,
+          61
+        ],
+        [
+          44,
+          54,
+          153
+        ],
+        [
+          34,
+          58,
+          158
+        ]
+      ]
+    }
+  },
+  "confidence": {
+    "threshold": 0.6,
+    "share_confident": 0.122,
+    "accuracy_when_confident": 0.613,
+    "accuracy_when_unsure": 0.377
+  },
+  "hours": {
+    "median_baseline": {
+      "predicts": 42.4,
+      "mae_hours": 201.0,
+      "median_abs_error_hours": 33.8
+    },
+    "model": {
+      "mae_hours": 199.4,
+      "median_abs_error_hours": 19.4
+    }
+  }
+}

@@ -82,7 +82,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Stats */
+        /**
+         * Stats
+         * @description Everything the public stats page shows. Cached: it only changes when a sync runs.
+         */
         get: operations["stats_api_v1_stats_get"];
         put?: never;
         post?: never;
@@ -456,6 +459,41 @@ export interface components {
             /** Avatar Url */
             avatar_url: string | null;
         };
+        /** MethodScores */
+        MethodScores: {
+            /** Accuracy */
+            accuracy: number;
+            /** Macro F1 */
+            macro_f1: number;
+            /** Severe Error Rate */
+            severe_error_rate: number;
+        };
+        /**
+         * ModelStats
+         * @description Test-set results from ml/results.json; the full write-up is ml/EVAL.md.
+         */
+        ModelStats: {
+            /**
+             * Trained At
+             * Format: date-time
+             */
+            trained_at: string;
+            /** Examples Used */
+            examples_used: number;
+            /** Test Examples */
+            test_examples: number;
+            /** Test Period */
+            test_period: string[];
+            model: components["schemas"]["MethodScores"];
+            heuristic: components["schemas"]["MethodScores"];
+            majority: components["schemas"]["MethodScores"];
+            /** Majority Predicts */
+            majority_predicts: string;
+            /** Share Confident */
+            share_confident: number;
+            /** Accuracy When Confident */
+            accuracy_when_confident: number;
+        };
         /** RecommendedIssue */
         RecommendedIssue: {
             /** Id */
@@ -603,6 +641,33 @@ export interface components {
             /** Repos Indexed */
             repos_indexed: number;
             last_sync: components["schemas"]["SyncRunOut"] | null;
+            last_recheck?: components["schemas"]["SyncRunOut"] | null;
+            /**
+             * Recent Runs
+             * @default []
+             */
+            recent_runs: components["schemas"]["SyncRunOut"][];
+            /**
+             * Model Scored
+             * @default 0
+             */
+            model_scored: number;
+            /**
+             * Hidden By Reason
+             * @default []
+             */
+            hidden_by_reason: components["schemas"]["FacetCount"][];
+            /**
+             * By Level
+             * @default []
+             */
+            by_level: components["schemas"]["FacetCount"][];
+            /**
+             * By Language
+             * @default []
+             */
+            by_language: components["schemas"]["FacetCount"][];
+            model?: components["schemas"]["ModelStats"] | null;
         };
         /** SyncRunOut */
         SyncRunOut: {
@@ -617,6 +682,17 @@ export interface components {
             status: string;
             /** Issues Upserted */
             issues_upserted: number;
+            /**
+             * Kind
+             * @default sync
+             * @enum {string}
+             */
+            kind: "sync" | "recheck";
+            /**
+             * Issues Seen
+             * @default 0
+             */
+            issues_seen: number;
         };
         /** ValidationError */
         ValidationError: {

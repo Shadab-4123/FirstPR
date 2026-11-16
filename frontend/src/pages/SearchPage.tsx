@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Link } from 'react-router'
 
 import { api, type SortKey } from '../api/client'
 import { IssueRow } from '../components/IssueRow'
@@ -46,9 +47,16 @@ export const SearchPage = () => {
     <div className="mx-auto max-w-5xl px-4 pb-24 sm:px-8">
       <SiteHeader
         aside={
-          stats.data &&
-          `${stats.data.issues_available.toLocaleString()} open issues in ${stats.data.repos_indexed.toLocaleString()} repos` +
-            (stats.data.last_sync ? `, synced ${timeAgo(stats.data.last_sync.started_at)}` : '')
+          stats.data && (
+            <>
+              {`${stats.data.issues_available.toLocaleString()} open issues in ${stats.data.repos_indexed.toLocaleString()} repos`}
+              {stats.data.last_sync && `, synced ${timeAgo(stats.data.last_sync.started_at)}`}
+              {' · '}
+              <Link to="/stats" className="underline hover:text-ink">
+                Stats
+              </Link>
+            </>
+          )
         }
       />
 

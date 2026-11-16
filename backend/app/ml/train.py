@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.models import TrainingExample
+from app.ml.card import PUBLISHED_RESULTS
 from app.ml.dataset import (
     BANDS,
     effort_band,
@@ -174,7 +175,10 @@ def main() -> None:
     }
 
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    text = json.dumps(results, indent=2) + "\n"
+    (args.out / "results.json").write_text(text)
+    # The API image holds only backend/, so the stats page reads this copy.
+    PUBLISHED_RESULTS.write_text(text)
     joblib.dump(
         {"model": model, "hours_model": hours_model, "features": list(x_train.columns),
          "bands": list(BANDS), "chosen": chosen, "trained_at": results["trained_at"]},

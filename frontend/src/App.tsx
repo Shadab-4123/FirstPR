@@ -13,6 +13,7 @@ const MyIssuesPage = lazy(() =>
   import('./pages/MyIssuesPage').then((m) => ({ default: m.MyIssuesPage })),
 )
 const ForYouPage = lazy(() => import('./pages/ForYouPage').then((m) => ({ default: m.ForYouPage })))
+const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })))
 const GuidePage = lazy(() => import('./pages/GuidePage').then((m) => ({ default: m.GuidePage })))
 
 const Lazy = ({ page }: { page: ReactNode }) => <Suspense fallback={null}>{page}</Suspense>
@@ -30,6 +31,7 @@ export const App = () => (
         <Route path="/explore" element={<Lazy page={<ExplorePage />} />} />
         <Route path="/explore/:level" element={<Lazy page={<LevelPage />} />} />
         <Route path="/guide" element={<Lazy page={<GuidePage />} />} />
+        <Route path="/stats" element={<Lazy page={<StatsPage />} />} />
         <Route path="/for-you" element={<Lazy page={<ForYouPage />} />} />
         <Route path="/my-issues" element={<Lazy page={<MyIssuesPage />} />} />
       </Routes>
