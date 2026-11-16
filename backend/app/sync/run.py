@@ -133,7 +133,7 @@ async def store_item(
     if repo.stars < min_stars:
         stats.skipped_low_stars += 1
         return
-    upsert_issue(db, map_issue(item, repo.id))
+    upsert_issue(db, map_issue(item, repo.id, repo_stars=repo.stars))
     stats.issues_upserted += 1
 
 

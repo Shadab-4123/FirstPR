@@ -6,17 +6,20 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 import respx
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.db.models import Issue, SyncRun
 from app.github.client import GitHubClient
+from app.scoring.classify import contributor_level
 from app.sync.mapping import map_issue, map_repo
 from app.sync.recheck import run_recheck
 from app.sync.runs import INTERRUPTED, Deadline
 from app.sync.upsert import upsert_issue, upsert_repo
+from tests.fixture_repo import REPO_STARS
 
 BASE = "https://api.github.com"
 REPO = "andrewsiah/agentswarm-data-tasks"
+
 
 
 async def _no_sleep(_: float) -> None:
@@ -29,7 +32,7 @@ def seeded(db_session_factory, fixture):
     item = copy.deepcopy(fixture("search_issues_python.json")["items"][0])
     with db_session_factory() as db:
         repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
-        issue_id = upsert_issue(db, map_issue(item, repo_id))
+        issue_id = upsert_issue(db, map_issue(item, repo_id, repo_stars=REPO_STARS))
         db.commit()
     url = f"{BASE}/repos/{REPO}/issues/{item['number']}"
     return db_session_factory, item, issue_id, url
@@ -131,7 +134,7 @@ async def test_sync_does_not_overwrite_a_detected_claim(seeded, fixture):
 
     # Next day the search still returns it (open + unassigned) and the sync re-upserts it.
     with factory() as db:
-        upsert_issue(db, map_issue(item, _issue(factory, issue_id).repo_id))
+        upsert_issue(db, map_issue(item, _issue(factory, issue_id).repo_id, repo_stars=REPO_STARS))
         db.commit()
     assert _issue(factory, issue_id).unavailable_reason == "claimed_in_comments"
 
@@ -201,3 +204,31 @@ async def test_a_recheck_first_clears_a_run_left_running(seeded):
     with factory() as db:
         statuses = sorted(r.status for r in db.execute(select(SyncRun)).scalars())
     assert statuses == ["failed", "succeeded"]
+
+
+@respx.mock
+async def test_a_refetched_issue_gets_its_level_even_if_the_job_dies_before_rescoring(
+    seeded, monkeypatch
+):
+    """2026-11-16: a killed re-check stored fresh difficulty but kept old levels, so "hard"
+    issues stayed under "new to open source". Level must be written with the difficulty."""
+    factory, item, issue_id, url = seeded
+    with factory() as db:
+        db.execute(update(Issue).where(Issue.id == issue_id).values(level="new"))
+        db.commit()
+    relabelled = {**item, "labels": [{"name": "help wanted"}]}  # no longer a beginner label
+    respx.get(url).respond(200, json=relabelled)
+    _mock_extras(url)
+
+    def killed(*_args, **_kwargs):
+        raise asyncio.CancelledError  # stopped before the final rescore
+
+    monkeypatch.setattr("app.sync.recheck.rescore_issues", killed)
+    monkeypatch.setattr("app.sync.recheck.COMMIT_EVERY", 1)  # its batch was already committed
+    with pytest.raises(asyncio.CancelledError):
+        await _recheck(factory)
+
+    issue = _issue(factory, issue_id)
+    assert issue.labels == ["help wanted"]
+    assert issue.level == contributor_level(issue.labels, issue.difficulty_label, REPO_STARS)
+    assert issue.level != "new"

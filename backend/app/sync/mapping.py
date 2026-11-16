@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from app.scoring.availability import check_availability
+from app.scoring.classify import contribution_kind, contributor_level
 from app.scoring.difficulty import extract_signals, score_difficulty
 
 # Enough for the issue overview page to show what it's about; search results send less.
@@ -40,7 +41,11 @@ def map_repo(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
+def map_issue(item: dict[str, Any], repo_id: int, *, repo_stars: int) -> dict[str, Any]:
+    """One GitHub issue as a row. Difficulty, level and type are computed together, so a row is
+    never stored with a level that disagrees with its difficulty, even if the job dies before
+    its final rescore (on 2026-11-16 a killed re-check left 10 "hard" issues filed as "new").
+    `repo_stars` is required because the level depends on it."""
     body = clean_text(item.get("body"))
     labels = [label["name"] for label in item.get("labels", [])]
     assignees = item.get("assignees") or ([item["assignee"]] if item.get("assignee") else [])
@@ -73,4 +78,6 @@ def map_issue(item: dict[str, Any], repo_id: int) -> dict[str, Any]:
         "difficulty_method": "baseline_heuristic",
         "difficulty_confidence": None,
         "difficulty_reasons": difficulty.reasons,
+        "level": contributor_level(labels, difficulty.label, repo_stars),
+        "kind": contribution_kind(labels, clean_text(item["title"])),
     }

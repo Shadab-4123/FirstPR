@@ -14,8 +14,10 @@ from app.main import app
 from app.ml.card import PUBLISHED_RESULTS
 from app.sync.mapping import map_issue, map_repo
 from app.sync.upsert import upsert_issue, upsert_repo
+from tests.fixture_repo import REPO_STARS
 
 REPO_ROOT = Path(__file__).parents[2]
+
 
 
 @pytest.fixture
@@ -39,11 +41,13 @@ def test_stats_counts_runs_and_model(client, db_session_factory, fixture):
     now = datetime.now(UTC)
     with db_session_factory() as db:
         repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
-        ids = [upsert_issue(db, map_issue(copy.deepcopy(item), repo_id)) for item in items[:3]]
+        ids = [upsert_issue(db, map_issue(copy.deepcopy(item), repo_id, repo_stars=REPO_STARS))
+               for item in items[:3]]
         db.execute(update(Issue).where(Issue.id == ids[0])
                    .values(is_available=False, unavailable_reason="claimed"))
         db.execute(update(Issue).where(Issue.id == ids[1])
                    .values(difficulty_method="model_v1", level="new"))
+        db.execute(update(Issue).where(Issue.id == ids[2]).values(level="some"))
         db.add_all([
             SyncRun(query="languages=python labels=good first issue", status="succeeded",
                     started_at=now - timedelta(hours=5), finished_at=now - timedelta(hours=4),
@@ -60,7 +64,8 @@ def test_stats_counts_runs_and_model(client, db_session_factory, fixture):
     assert data["issues_indexed"] == 3 and data["issues_available"] == 2
     assert data["hidden_by_reason"] == [{"value": "claimed", "count": 1}]
     assert data["model_scored"] == 1
-    assert {"value": "new", "count": 1} in data["by_level"]
+    assert sorted(data["by_level"], key=lambda f: f["value"]) == [
+        {"value": "new", "count": 1}, {"value": "some", "count": 1}]  # the claimed one isn't free
     assert data["by_language"][0]["count"] == 2
     # A failed run is listed but never counts as "last sync".
     assert [r["kind"] for r in data["recent_runs"]] == ["sync", "recheck", "sync"]

@@ -14,6 +14,7 @@ from app.scoring.difficulty import extract_signals  # noqa: E402
 from app.sync.mapping import map_issue, map_repo  # noqa: E402
 from app.sync.scoring import rescore_issues  # noqa: E402
 from app.sync.upsert import upsert_issue, upsert_repo  # noqa: E402
+from tests.fixture_repo import REPO_STARS
 
 
 @pytest.fixture(scope="module")
@@ -62,7 +63,7 @@ def stored(db_session_factory, fixture):
         item = {**copy.deepcopy(fixture("search_issues_python.json")["items"][0]), **overrides}
         with db_session_factory() as db:
             repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
-            issue_id = upsert_issue(db, map_issue(item, repo_id))
+            issue_id = upsert_issue(db, map_issue(item, repo_id, repo_stars=REPO_STARS))
             db.commit()
         return issue_id
     return add

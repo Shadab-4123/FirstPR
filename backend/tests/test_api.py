@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.main import app
 from app.sync.mapping import map_issue, map_repo
 from app.sync.upsert import reclassify_issues, rescore_repo_health, upsert_issue, upsert_repo
+from tests.fixture_repo import REPO_STARS
 
 
 @pytest.fixture
@@ -30,7 +31,7 @@ def seed(db_session_factory, fixture):
         item = {**copy.deepcopy(fixture("search_issues_python.json")["items"][0]), **overrides}
         with db_session_factory() as db:
             repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
-            issue_id = upsert_issue(db, map_issue(item, repo_id))
+            issue_id = upsert_issue(db, map_issue(item, repo_id, repo_stars=REPO_STARS))
             rescore_repo_health(db)
             reclassify_issues(db)
             db.commit()

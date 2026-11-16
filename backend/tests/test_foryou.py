@@ -66,7 +66,8 @@ def seed(db_session_factory, fixture):
                 "id": 5000 + n, "number": n}
         with db_session_factory() as db:
             repo_id = upsert_repo(db, map_repo(repo), etag=None)
-            issue_id = upsert_issue(db, map_issue(item, repo_id))
+            row = map_issue(item, repo_id, repo_stars=repo["stargazers_count"])
+            issue_id = upsert_issue(db, row)
             db.execute(update(Issue).where(Issue.id == issue_id)
                        .values(level=level, is_available=available))
             db.commit()

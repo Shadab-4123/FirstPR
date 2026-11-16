@@ -12,6 +12,7 @@ from app.db.session import get_db
 from app.main import app
 from app.sync.mapping import map_issue, map_repo
 from app.sync.upsert import upsert_issue, upsert_repo
+from tests.fixture_repo import REPO_STARS
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def issue_id(db_session_factory, fixture) -> int:
     item = copy.deepcopy(fixture("search_issues_python.json")["items"][0])
     with db_session_factory() as db:
         repo_id = upsert_repo(db, map_repo(fixture("repo.json")), etag=None)
-        new_id = upsert_issue(db, map_issue(item, repo_id))
+        new_id = upsert_issue(db, map_issue(item, repo_id, repo_stars=REPO_STARS))
         db.commit()
     return new_id
 
@@ -121,7 +122,7 @@ def test_most_recently_changed_comes_first(client, sign_in, issue_id, fixture,
     other = copy.deepcopy(fixture("search_issues_python.json")["items"][1])
     with db_session_factory() as db:
         repo_id = db.get(Issue, issue_id).repo_id
-        other_id = upsert_issue(db, map_issue(other, repo_id))
+        other_id = upsert_issue(db, map_issue(other, repo_id, repo_stars=REPO_STARS))
         db.commit()
     sign_in()
     client.put(f"/api/v1/me/saved/{issue_id}", json={})

@@ -41,7 +41,8 @@ def main() -> None:
                         "restart identity cascade"))
         repo_id = upsert_repo(db, map_repo(repo), etag=None)
         for item in items:
-            upsert_issue(db, map_issue(copy.deepcopy(item), repo_id))
+            row = map_issue(copy.deepcopy(item), repo_id, repo_stars=repo["stargazers_count"])
+            upsert_issue(db, row)
         rescore_repo_health(db)
         reclassify_issues(db)
         db.commit()

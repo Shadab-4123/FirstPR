@@ -101,7 +101,7 @@ async def recheck_issue(
         stats.unchanged += 1
         return
 
-    row = map_issue(resp.data, issue.repo_id)
+    row = map_issue(resp.data, issue.repo_id, repo_stars=issue.repo.stars)
     has_linked_pr = False
     recent_comments: list[str] = []
     # Extra calls only when they could still change the answer.
