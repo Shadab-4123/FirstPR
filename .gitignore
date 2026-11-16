@@ -29,3 +29,6 @@ dist/
 # Local credential notes, never commit
 supabase.txt
 *.secret.txt
+
+# Load test: per-run API logs (summaries in perf/load/results are committed)
+perf/load/results/*.api.log

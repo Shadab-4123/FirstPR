@@ -1,5 +1,7 @@
 # Search indexes: before and after
 
+For the end-to-end effect under load (50 users, search p95 250 → 92 ms), see [LOAD_TEST.md](LOAD_TEST.md).
+
 Migration `a36920872992` (`backend/app/db/migrations/versions/20261115_a36920872992_add_search_indexes.py`).
 
 ## Method

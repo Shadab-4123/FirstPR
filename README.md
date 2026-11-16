@@ -42,7 +42,8 @@ This is a work in progress, built on a four-week plan (see [`docs/blueprint.md`]
 | "For you": languages and level inferred from public GitHub activity, explained ranking | ✅ done |
 | Public stats page: index counts, sync freshness, model vs baselines | ✅ done |
 | Frontend tests (Vitest + Testing Library) and a Playwright flow in CI | ✅ done |
-| Load test, Sentry, demo GIF | ⏳ planned |
+| Load test: 50 users for 2 min, search p95 250 → 92 ms with indexes ([k6 results](perf/LOAD_TEST.md)) | ✅ done |
+| Sentry, demo GIF | ⏳ planned |
 
 ## Architecture
 
@@ -163,7 +164,7 @@ Errors always use the same shape: `{ "error": { "code": "...", "message": "..." 
 | --- | --- |
 | Open issues indexed | TODO |
 | Repos indexed | TODO |
-| Search p95 latency (before → after indexes) | TODO ms → TODO ms |
+| Search p95 under load, 50 users on 200k issues (before → after indexes) | 250 ms → 92 ms ([how](perf/LOAD_TEST.md)) |
 | Difficulty model accuracy vs heuristic baseline (658 held-out issues) | 40.6% vs 30.4% |
 | Severe errors (easy↔hard), model vs heuristic | 14.4% vs 22.5% |
 | Backend test coverage | TODO % |
