@@ -130,8 +130,8 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
             )}
           </dl>
           <p className="mt-3 text-xs leading-relaxed text-muted">
-            Size is estimated from the issue text by a model trained on 3,291 past issues. It's right about 4
-            times in 10, and rarely mistakes a hard issue for an easy one.{' '}
+            Size is estimated from the issue text by a model trained on 2,633 past issues. On 658 newer ones
+            it was right about 4 times in 10, and mixed up easy and hard about 1 time in 7.{' '}
             <a href={EVAL_URL} target="_blank" rel="noreferrer" className="underline">
               How it was tested
             </a>

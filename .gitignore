@@ -32,3 +32,6 @@ supabase.txt
 
 # Load test: per-run API logs (summaries in perf/load/results are committed)
 perf/load/results/*.api.log
+
+# Raw demo recording (docs/demo.gif is committed)
+docs/.demo-video/

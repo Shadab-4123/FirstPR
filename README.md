@@ -6,9 +6,9 @@
 
 > Hosted on Render's free tier: if the site has been idle, the first search can take ~50 s while the API wakes up.
 
-<!-- TODO(you): record a ~15s GIF (search → filter → open an issue) and save it as docs/demo.gif, then uncomment:
-![FirstPR demo](docs/demo.gif)
--->
+![FirstPR demo: choose Python and easy, search "docs", open an issue to see that it's still unclaimed, its size, repo health and what to do](docs/demo.gif)
+
+<sub>Recorded from the live site with a script (<code>frontend/scripts/record-demo.mjs</code>), so it can be re-recorded when the UI changes.</sub>
 
 ---
 
@@ -45,7 +45,6 @@ Built on a four-week plan (see [`docs/blueprint.md`](docs/blueprint.md)).
 | Tests: 199 backend (87% coverage), Vitest components, a Playwright flow, all in CI | ✅ done |
 | Load test: 50 users for 2 min, search p95 250 → 92 ms with indexes ([k6 results](perf/LOAD_TEST.md)) | ✅ done |
 | Docker, Render deploy, CI, daily sync workflow, structured logs, `/health`, Sentry | ✅ done |
-| Demo GIF | ⏳ planned |
 
 ## Architecture
 
