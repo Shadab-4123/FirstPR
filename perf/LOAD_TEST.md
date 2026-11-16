@@ -26,7 +26,7 @@ About 4,100 requests per run, at 28–29 requests per second. Repeating the run 
 
   Users pause 1–3 s between steps and 3–8 s on the issue page, so these are 50 people reading pages, not 50 loops firing as fast as they can.
 - **Load shape.** The 50 users start over 15 s, then the load holds at 50 for 2 minutes. k6 thresholds fail the run if search or issue p95 goes over 300 ms, or if more than 1% of requests fail.
-- **Data.** The 200,000 synthetic issues across 20,000 repos are the same data as [INDEXES.md](INDEXES.md). The live index is too small for indexes to matter: at about 1,200 issues every query is a sub-millisecond scan. Level and type were filled in with the app's own `reclassify_issues`, so the Explore filters return real matches.
+- **Data.** The 200,000 synthetic issues across 20,000 repos are the same data as [INDEXES.md](INDEXES.md). The live index (about 4,600 issues on 2026-11-17) is too small for the indexes to show much difference. Level and type were filled in with the app's own `reclassify_issues`, so the Explore filters return real matches.
 - **"No indexes".** [`load/indexes.py`](load/indexes.py) runs only the index migration's own `downgrade()`, then its `upgrade()` to restore. `alembic downgrade` can't be used: it would also drop columns that later migrations added and the API reads.
 - **Server.** One uvicorn process with INFO logs, as in production, pinned to one CPU core (`taskset -c 0`). k6 ran on the other 15 cores of the laptop (Intel i5-1240P). Postgres 16.15 was local and not limited.
 

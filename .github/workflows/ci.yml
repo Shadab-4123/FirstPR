@@ -45,7 +45,7 @@ jobs:
       - name: Type check
         run: mypy app
       - name: Tests
-        run: pytest -q
+        run: pytest -q --cov=app --cov-report=term:skip-covered
 
   frontend:
     runs-on: ubuntu-latest
