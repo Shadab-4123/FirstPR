@@ -12,9 +12,9 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 
-from sqlalchemy import CursorResult, select, update
+from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import get_settings
@@ -34,6 +34,13 @@ from app.sync.discover import (
     needs_split,
 )
 from app.sync.mapping import map_issue, map_repo, repo_full_name_from_url
+from app.sync.runs import (
+    Deadline,
+    failure_reason,
+    mark_abandoned_runs,
+    rotate_daily,
+    stop_gracefully_on_sigterm,
+)
 from app.sync.scoring import rescore_issues
 from app.sync.upsert import (
     rescore_repo_health,
@@ -170,28 +177,18 @@ async def sync_big_repo_bugs(
         db.commit()
 
 
-ABANDONED_AFTER = timedelta(hours=3)
-
-
-def mark_abandoned_runs(db: Session) -> int:
-    """A run killed mid-way (Ctrl+C, machine off, CI timeout) never records its end.
-    Without this it would stay "running" forever and confuse /stats."""
-    result: CursorResult = db.execute(  # type: ignore[assignment]
-        update(SyncRun)
-        .where(SyncRun.status == "running",
-               SyncRun.started_at < datetime.now(UTC) - ABANDONED_AFTER)
-        .values(status="failed", error="abandoned: process stopped before finishing")
-    )
-    db.commit()
-    return result.rowcount
-
-
 async def run_sync(
     session_factory: sessionmaker[Session], client: GitHubClient, languages: list[str], *,
     limit: int, lookback_days: int, min_stars: int,
     labels: tuple[str, ...] = (GOOD_FIRST_ISSUE, HELP_WANTED), big_repo_bugs: bool = True,
-    difficulty_model: DifficultyModel | None = None,
+    difficulty_model: DifficultyModel | None = None, deadline: Deadline | None = None,
 ) -> SyncRun:
+    """Fetch each language x label, then the big-repo bug pass, then rescore everything.
+
+    With a deadline, no new language/label is started once it has passed (the one in progress
+    finishes); the rescoring always runs, and the run still counts as succeeded.
+    """
+    deadline = deadline or Deadline(None)
     with session_factory() as db:
         if abandoned := mark_abandoned_runs(db):
             log.warning("marked abandoned runs as failed", extra={"count": abandoned})
@@ -202,23 +199,34 @@ async def run_sync(
 
         stats = SyncStats()
         try:
+            skipped: list[str] = []
             for language in languages:
                 for label in labels:
+                    if deadline.passed():
+                        skipped.append(f"{language}/{label}")
+                        continue
                     await sync_language(
                         db, client, language, limit=limit, lookback_days=lookback_days,
                         min_stars=min_stars, stats=stats, label=label,
                     )
             if big_repo_bugs:
-                await sync_big_repo_bugs(db, client, stats)
+                if deadline.passed():
+                    skipped.append("big-repo bugs")
+                else:
+                    await sync_big_repo_bugs(db, client, stats)
+            if skipped:
+                log.warning("time budget reached; skipped until the next run",
+                            extra={"skipped": skipped})
             rescored = rescore_repo_health(db)
             # Difficulty (model), then level/type, which reads both difficulty and stars.
             counts = rescore_issues(db, difficulty_model)
             log.info("rescored", extra={"repos": rescored, **counts})
             run.status = "succeeded"
-        except Exception as exc:  # record the failure, then re-raise for the exit code
+        # BaseException: also Ctrl+C and CI stopping the job, which must not leave "running".
+        except BaseException as exc:  # record the failure, then re-raise for the exit code
             db.rollback()
             run.status = "failed"
-            run.error = f"{type(exc).__name__}: {exc}"[:2000]
+            run.error = failure_reason(exc)
             raise
         finally:
             run.finished_at = datetime.now(UTC)
@@ -253,7 +261,10 @@ def main() -> None:
     parser.add_argument("--lookback-days", type=int, default=180)
     parser.add_argument("--min-stars", type=int, default=10,
                         help="skip repos below this many stars (filters spam/toy repos)")
+    parser.add_argument("--max-minutes", type=float, default=None,
+                        help="stop starting new languages after this long (CI time budget)")
     args = parser.parse_args()
+    stop_gracefully_on_sigterm()
 
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -271,12 +282,15 @@ def main() -> None:
             settings.github_token, max_retries=settings.github_max_retries,
             max_wait_s=settings.github_max_rate_limit_wait_s,
         ) as client:
+            # A different first language each day, so the budget doesn't always cut the same ones.
+            languages = rotate_daily(args.languages or ["python"], date.today())
             await run_sync(
-                SessionLocal, client, args.languages or ["python"], limit=args.limit,
+                SessionLocal, client, languages, limit=args.limit,
                 lookback_days=args.lookback_days, min_stars=args.min_stars,
                 labels=labels,
                 big_repo_bugs=not args.beginner_only,
                 difficulty_model=DifficultyModel.load(),
+                deadline=Deadline(args.max_minutes),
             )
 
     asyncio.run(_run())

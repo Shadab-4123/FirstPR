@@ -32,6 +32,12 @@ from app.github.client import GitHubClient, GitHubError
 from app.ml.predict import DifficultyModel
 from app.scoring.availability import check_availability, has_open_linked_pr
 from app.sync.mapping import BODY_EXCERPT_CHARS, map_issue
+from app.sync.runs import (
+    Deadline,
+    failure_reason,
+    mark_abandoned_runs,
+    stop_gracefully_on_sigterm,
+)
 from app.sync.scoring import rescore_issues
 
 log = logging.getLogger("firstpr.recheck")
@@ -131,9 +137,15 @@ async def recheck_issue(
 
 async def run_recheck(
     session_factory: sessionmaker[Session], client: GitHubClient, *, max_issues: int,
-    difficulty_model: DifficultyModel | None = None,
+    difficulty_model: DifficultyModel | None = None, deadline: Deadline | None = None,
 ) -> SyncRun:
+    """Check the least recently checked issues first. With a deadline, it stops checking once
+    it has passed, rescores what it saw, and still counts as succeeded: the rest wait for the
+    next run, which starts with them."""
+    deadline = deadline or Deadline(None)
     with session_factory() as db:
+        if abandoned := mark_abandoned_runs(db):
+            log.warning("marked abandoned runs as failed", extra={"count": abandoned})
         run = SyncRun(query=f"recheck max={max_issues}")
         db.add(run)
         db.commit()
@@ -141,20 +153,25 @@ async def run_recheck(
         try:
             now = datetime.now(UTC)
             for i, issue in enumerate(issues_to_check(db, max_issues), start=1):
+                if deadline.passed():
+                    log.warning("time budget reached; the rest wait for the next run",
+                                extra={"checked": stats.checked})
+                    break
                 await recheck_issue(db, client, issue, stats, now)
                 if i % COMMIT_EVERY == 0:
+                    _record_progress(run, stats)  # /stats shows a running job's progress
                     db.commit()  # a crash loses at most COMMIT_EVERY checks
             rescore_issues(db, difficulty_model)  # text, labels or comments may have changed
             run.status = "succeeded"
-        except Exception as exc:
+        # BaseException: also Ctrl+C and CI stopping the job, which must not leave "running".
+        except BaseException as exc:
             db.rollback()
             run.status = "failed"
-            run.error = f"{type(exc).__name__}: {exc}"[:2000]
+            run.error = failure_reason(exc)
             raise
         finally:
             run.finished_at = datetime.now(UTC)
-            run.issues_seen = stats.checked
-            run.issues_upserted = stats.updated + stats.gone
+            _record_progress(run, stats)
             run.github_requests = client.requests_made
             run.rate_limit_remaining = client.buckets["core"].remaining
             db.add(run)
@@ -164,11 +181,19 @@ async def run_recheck(
         return run
 
 
+def _record_progress(run: SyncRun, stats: RecheckStats) -> None:
+    run.issues_seen = stats.checked
+    run.issues_upserted = stats.updated + stats.gone
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Re-check stored issues against GitHub")
     parser.add_argument("--max", type=int, default=1500, dest="max_issues",
                         help="max issues to check this run (oldest-checked first)")
+    parser.add_argument("--max-minutes", type=float, default=None,
+                        help="stop checking after this long (CI time budget)")
     args = parser.parse_args()
+    stop_gracefully_on_sigterm()
 
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -181,7 +206,8 @@ def main() -> None:
             max_wait_s=settings.github_max_rate_limit_wait_s,
         ) as client:
             await run_recheck(SessionLocal, client, max_issues=args.max_issues,
-                              difficulty_model=DifficultyModel.load())
+                              difficulty_model=DifficultyModel.load(),
+                              deadline=Deadline(args.max_minutes))
 
     asyncio.run(_run())
 

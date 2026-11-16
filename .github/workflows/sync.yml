@@ -23,7 +23,11 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 150  # search allows 30 requests/min; two labels x 10 languages + bug pass
+    # Time plan (2026-11-16 the sync took 127 of 150 minutes and CI killed the re-check):
+    #   re-check  budget 30 min, hard stop 40 (step timeout)
+    #   sync      budget 85 min, hard stop 100; the language in progress may run past the budget
+    # Each job stops itself at its budget; the hard stops are only a backstop.
+    timeout-minutes: 150
     defaults:
       run:
         working-directory: backend
@@ -45,14 +49,20 @@ jobs:
       - run: pip install -e ".[ml]"
       - name: Apply pending migrations
         run: alembic upgrade head
+      # First: hiding closed and taken issues matters more than adding new ones, so it never
+      # gets only the time the sync leaves over.
+      - name: Re-check stored issues (closed, assigned, claimed, linked PR)
+        timeout-minutes: 40
+        run: python -m app.sync.recheck --max 2000 --max-minutes 30
+      # Runs even if the re-check failed. Starts from a different language each day, so the
+      # budget doesn't always cut the same ones.
       - name: Sync
+        if: ${{ !cancelled() }}
+        timeout-minutes: 100
         run: >-
           python -m app.sync.run
           --language python --language javascript --language typescript
           --language go --language rust --language java --language "c++"
           --language "c#" --language ruby --language php
           --limit ${{ inputs.limit || '300' }}
-      # Runs even if the sync failed: hiding closed/taken issues matters more than adding new ones.
-      - name: Re-check stored issues (closed, assigned, claimed, linked PR)
-        if: ${{ !cancelled() }}
-        run: python -m app.sync.recheck --max 2000
+          --max-minutes 85

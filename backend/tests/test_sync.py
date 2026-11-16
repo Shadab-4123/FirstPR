@@ -13,6 +13,7 @@ from app.github.client import GitHubClient
 from app.sync.discover import MAX_QUERY_CHARS, batch_repo_queries
 from app.sync.mapping import map_repo
 from app.sync.run import SyncStats, run_sync, sync_big_repo_bugs
+from app.sync.runs import Deadline
 from app.sync.upsert import upsert_repo
 
 BASE = "https://api.github.com"
@@ -88,3 +89,12 @@ async def test_bug_pass_names_only_big_repos(db_session_factory, fixture):
         stored = db.execute(select(Issue)).scalar_one()
     assert stored.title == "Crash when config is empty"
 
+
+
+@respx.mock
+async def test_a_spent_budget_skips_fetching_but_still_rescores(db_session_factory):
+    async with GitHubClient("t", sleep=_no_sleep) as client:
+        run = await run_sync(db_session_factory, client, ["python", "go"], limit=50,
+                             lookback_days=30, min_stars=10, deadline=Deadline(0))
+    assert run.status == "succeeded" and run.finished_at is not None
+    assert not respx.calls

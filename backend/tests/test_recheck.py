@@ -1,6 +1,8 @@
 """Re-check job against the real test schema, with GitHub mocked by respx."""
 
+import asyncio
 import copy
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import respx
@@ -10,6 +12,7 @@ from app.db.models import Issue, SyncRun
 from app.github.client import GitHubClient
 from app.sync.mapping import map_issue, map_repo
 from app.sync.recheck import run_recheck
+from app.sync.runs import INTERRUPTED, Deadline
 from app.sync.upsert import upsert_issue, upsert_repo
 
 BASE = "https://api.github.com"
@@ -154,3 +157,47 @@ async def test_short_stored_body_is_refetched_without_etag(seeded):
 
     await _recheck(factory)  # next time: body is complete, so the ETag is used again
     assert route.calls.last.request.headers["If-None-Match"] == 'W/"new"'
+
+
+# --- A run must never stay "running" after the job is gone (app/sync/runs.py) ---
+
+
+async def test_a_stopped_recheck_records_interrupted_and_its_progress(seeded, monkeypatch):
+    """What a CI time limit does: the task is cancelled mid-check."""
+    factory, *_ = seeded
+
+    async def stopped(*_args, **_kwargs):
+        raise asyncio.CancelledError
+
+    monkeypatch.setattr("app.sync.recheck.recheck_issue", stopped)
+    with pytest.raises(asyncio.CancelledError):
+        await _recheck(factory)
+    with factory() as db:
+        run = db.execute(select(SyncRun)).scalar_one()
+    assert run.status == "failed" and run.error == INTERRUPTED
+    assert run.finished_at is not None and run.issues_seen == 0
+
+
+@respx.mock
+async def test_a_spent_budget_stops_checking_but_still_succeeds(seeded):
+    factory, _, issue_id, _ = seeded
+    async with GitHubClient("t", sleep=_no_sleep, rand=lambda: 0.0) as client:
+        run = await run_recheck(factory, client, max_issues=100, deadline=Deadline(0))
+    assert run.status == "succeeded" and run.issues_seen == 0
+    assert not respx.calls  # nothing was fetched
+    assert _issue(factory, issue_id).last_checked_at is None  # waits for the next run
+
+
+@respx.mock
+async def test_a_recheck_first_clears_a_run_left_running(seeded):
+    factory, item, _, url = seeded
+    with factory() as db:
+        db.add(SyncRun(query="recheck max=2000", status="running",
+                       started_at=datetime.now(UTC) - timedelta(hours=9)))
+        db.commit()
+    respx.get(url).respond(200, json=item)
+    _mock_extras(url)
+    await _recheck(factory)
+    with factory() as db:
+        statuses = sorted(r.status for r in db.execute(select(SyncRun)).scalars())
+    assert statuses == ["failed", "succeeded"]
