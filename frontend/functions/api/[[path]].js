@@ -5,19 +5,42 @@
 
 const API_ORIGIN = 'https://firstpr-api-5lk3.onrender.com'
 
+// A sleeping free Render service answers a proxied request with an instant 502 instead of
+// holding it while it starts (2026-11-17). Reads are retried for up to a minute, so a
+// visitor gets a slow first load instead of an error page. An external pinger
+// (cron-job.org, every 5 minutes) normally keeps the API awake, so this rarely runs.
+const WAKE_STATUSES = new Set([502, 503])
+const RETRY_EVERY_MS = 3_000
+const RETRY_FOR_MS = 60_000
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 /** @param {{ request: Request }} context */
-export const onRequest = ({ request }) => {
+export const onRequest = async ({ request }) => {
   const url = new URL(request.url)
   const target = new URL(url.pathname + url.search, API_ORIGIN)
-  const hasBody = !['GET', 'HEAD'].includes(request.method)
+  const isRead = ['GET', 'HEAD'].includes(request.method)
   // Render picks the app by Host: forwarding "firstpr.pages.dev" gets a 502 "no-deploy".
   const headers = new Headers(request.headers)
   headers.delete('host')
-  return fetch(target, {
-    method: request.method,
-    headers,
-    body: hasBody ? request.body : undefined,
-    // Hand redirects (sign-in to GitHub and back) to the browser instead of following them here.
-    redirect: 'manual',
-  })
+
+  const send = () =>
+    fetch(target, {
+      method: request.method,
+      headers,
+      body: isRead ? undefined : request.body,
+      // Hand redirects (sign-in to GitHub and back) to the browser instead of following them here.
+      redirect: 'manual',
+    })
+
+  // Writes are sent once: their body can't be replayed, and they must never happen twice.
+  if (!isRead) return send()
+
+  const giveUpAt = Date.now() + RETRY_FOR_MS
+  let response = await send()
+  while (WAKE_STATUSES.has(response.status) && Date.now() < giveUpAt) {
+    await sleep(RETRY_EVERY_MS)
+    response = await send()
+  }
+  return response
 }

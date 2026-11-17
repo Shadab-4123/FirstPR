@@ -40,8 +40,8 @@ flowchart LR
     DB[(PostgreSQL on Supabase<br/>full-text search)]
     subgraph Actions["GitHub Actions"]
         JOBS["daily re-check + sync<br/>02:30 UTC"]
-        PING["keep-awake ping<br/>every 10 min"]
     end
+    PING["cron-job.org<br/>keep-awake ping, every 5 min"]
     GH[(GitHub API)]
     MODEL[[difficulty model<br/>scikit-learn]]
 
