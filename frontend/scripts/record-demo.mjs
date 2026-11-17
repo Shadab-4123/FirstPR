@@ -68,7 +68,7 @@ await page.mouse.move(600, 500)
 await pause(page, 1500) // the landing sentence
 
 await choose(page, 'Language', 'Python')
-await choose(page, 'Difficulty', 'easy')
+await choose(page, 'Size (short form)', 'easy') // the filter bar under the sentence
 
 const search = page.getByRole('searchbox', { name: 'Search titles and descriptions' })
 await moveTo(page, search)
