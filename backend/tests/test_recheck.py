@@ -232,3 +232,15 @@ async def test_a_refetched_issue_gets_its_level_even_if_the_job_dies_before_resc
     assert issue.labels == ["help wanted"]
     assert issue.level == contributor_level(issue.labels, issue.difficulty_label, REPO_STARS)
     assert issue.level != "new"
+
+
+@respx.mock
+async def test_the_recheck_leaves_requests_for_the_sync(seeded):
+    """2026-11-17: a re-check spent the hour's 5,000 requests and every job after it failed."""
+    factory, _, issue_id, _ = seeded
+    async with GitHubClient("t", sleep=_no_sleep, rand=lambda: 0.0) as client:
+        client.buckets["core"].remaining = 1500  # what GitHub said on the last response
+        run = await run_recheck(factory, client, max_issues=100, keep_requests=2000)
+    assert run.status == "succeeded" and run.issues_seen == 0
+    assert not respx.calls
+    assert _issue(factory, issue_id).last_checked_at is None  # first in line next time

@@ -18,6 +18,7 @@ from sqlalchemy import CursorResult, update
 from sqlalchemy.orm import Session
 
 from app.db.models import SyncRun
+from app.github.client import GitHubClient
 
 # Longer than any job can run in CI (the workflow's job limit is 150 minutes).
 ABANDONED_AFTER = timedelta(hours=3)
@@ -59,6 +60,14 @@ class Deadline:
 
     def passed(self) -> bool:
         return self._end is not None and self._clock() >= self._end
+
+
+def low_on_requests(client: GitHubClient, keep: int) -> bool:
+    """True once GitHub says fewer than `keep` core requests are left this hour. Jobs stop
+    there instead of running dry: a dry token fails every job after it until the hour
+    resets (2026-11-17: a re-check used ~5,000 requests and the sync then failed at once)."""
+    remaining = client.buckets["core"].remaining
+    return remaining is not None and remaining < keep
 
 
 def rotate_daily(items: Sequence[str], today: date) -> list[str]:

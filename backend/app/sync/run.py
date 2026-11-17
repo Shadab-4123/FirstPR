@@ -37,6 +37,7 @@ from app.sync.mapping import map_issue, map_repo, repo_full_name_from_url
 from app.sync.runs import (
     Deadline,
     failure_reason,
+    low_on_requests,
     mark_abandoned_runs,
     rotate_daily,
     stop_gracefully_on_sigterm,
@@ -53,6 +54,8 @@ log = logging.getLogger("firstpr.sync")
 
 PER_PAGE = 100
 MAX_PAGES = 10  # 10 x 100 = GitHub's 1,000-result cap
+# Don't start another language with fewer GitHub requests than this left this hour.
+MIN_REQUESTS_TO_START = 300
 
 
 @dataclass
@@ -202,7 +205,7 @@ async def run_sync(
             skipped: list[str] = []
             for language in languages:
                 for label in labels:
-                    if deadline.passed():
+                    if deadline.passed() or low_on_requests(client, MIN_REQUESTS_TO_START):
                         skipped.append(f"{language}/{label}")
                         continue
                     await sync_language(
@@ -210,12 +213,12 @@ async def run_sync(
                         min_stars=min_stars, stats=stats, label=label,
                     )
             if big_repo_bugs:
-                if deadline.passed():
+                if deadline.passed() or low_on_requests(client, MIN_REQUESTS_TO_START):
                     skipped.append("big-repo bugs")
                 else:
                     await sync_big_repo_bugs(db, client, stats)
             if skipped:
-                log.warning("time budget reached; skipped until the next run",
+                log.warning("time or request budget reached; skipped until the next run",
                             extra={"skipped": skipped})
             rescored = rescore_repo_health(db)
             # Difficulty (model), then level/type, which reads both difficulty and stars.

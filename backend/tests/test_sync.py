@@ -98,3 +98,13 @@ async def test_a_spent_budget_skips_fetching_but_still_rescores(db_session_facto
                              lookback_days=30, min_stars=10, deadline=Deadline(0))
     assert run.status == "succeeded" and run.finished_at is not None
     assert not respx.calls
+
+
+@respx.mock
+async def test_no_new_language_starts_when_requests_are_nearly_gone(db_session_factory):
+    async with GitHubClient("t", sleep=_no_sleep) as client:
+        client.buckets["core"].remaining = 50
+        run = await run_sync(db_session_factory, client, ["python", "go"], limit=50,
+                             lookback_days=30, min_stars=10)
+    assert run.status == "succeeded"
+    assert not respx.calls

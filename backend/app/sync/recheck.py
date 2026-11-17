@@ -35,6 +35,7 @@ from app.sync.mapping import BODY_EXCERPT_CHARS, map_issue
 from app.sync.runs import (
     Deadline,
     failure_reason,
+    low_on_requests,
     mark_abandoned_runs,
     stop_gracefully_on_sigterm,
 )
@@ -45,6 +46,8 @@ log = logging.getLogger("firstpr.recheck")
 CLAIM_LOOKBACK = timedelta(days=30)  # an "I'll take this" from last year doesn't count
 GONE_STATUSES = (301, 404, 410)
 COMMIT_EVERY = 50
+# Requests the re-check leaves for the sync that runs after it in the same hour.
+KEEP_FOR_SYNC = 2000
 
 
 @dataclass
@@ -138,10 +141,11 @@ async def recheck_issue(
 async def run_recheck(
     session_factory: sessionmaker[Session], client: GitHubClient, *, max_issues: int,
     difficulty_model: DifficultyModel | None = None, deadline: Deadline | None = None,
+    keep_requests: int = KEEP_FOR_SYNC,
 ) -> SyncRun:
-    """Check the least recently checked issues first. With a deadline, it stops checking once
-    it has passed, rescores what it saw, and still counts as succeeded: the rest wait for the
-    next run, which starts with them."""
+    """Check the least recently checked issues first. It stops when the deadline passes or
+    fewer than `keep_requests` GitHub requests are left this hour, rescores what it saw, and
+    still counts as succeeded: the rest wait for the next run, which starts with them."""
     deadline = deadline or Deadline(None)
     with session_factory() as db:
         if abandoned := mark_abandoned_runs(db):
@@ -156,6 +160,11 @@ async def run_recheck(
                 if deadline.passed():
                     log.warning("time budget reached; the rest wait for the next run",
                                 extra={"checked": stats.checked})
+                    break
+                if low_on_requests(client, keep_requests):
+                    log.warning("leaving the rest of this hour's GitHub requests for the sync",
+                                extra={"checked": stats.checked,
+                                       "remaining": client.buckets["core"].remaining})
                     break
                 await recheck_issue(db, client, issue, stats, now)
                 if i % COMMIT_EVERY == 0:
