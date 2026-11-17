@@ -49,7 +49,7 @@ export const ExplorePage = () => {
 
       <aside className="mt-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-link-soft p-6">
         <div className="flex items-center gap-4">
-          <span className="flex size-11 items-center justify-center rounded-full bg-white text-link shadow-card">
+          <span className="flex size-11 items-center justify-center rounded-full bg-surface text-link shadow-card">
             <BookIcon className="size-5" />
           </span>
           <div>

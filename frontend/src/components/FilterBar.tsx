@@ -46,10 +46,10 @@ export const FilterBar = ({
 
 /** A set filter's colours: indigo, or the difficulty's own colour for Size. */
 const TONE = {
-  link: { tile: 'bg-link text-white', text: 'text-link' },
-  easy: { tile: 'bg-easy text-white', text: 'text-easy' },
-  medium: { tile: 'bg-medium text-white', text: 'text-medium' },
-  hard: { tile: 'bg-hard text-white', text: 'text-hard' },
+  link: { tile: 'bg-accent text-white', text: 'text-link' },
+  easy: { tile: 'bg-easy-fill text-white', text: 'text-easy' },
+  medium: { tile: 'bg-medium-fill text-white', text: 'text-medium' },
+  hard: { tile: 'bg-hard-fill text-white', text: 'text-hard' },
 }
 
 /** One cell: icon, label and current value, with the real <select> laid invisibly over the
@@ -74,12 +74,12 @@ const FilterCell = ({
   return (
     <label
       className="group relative flex min-w-0 cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2.5 transition
-        hover:bg-white focus-within:bg-white focus-within:ring-2 focus-within:ring-link sm:px-4"
+        hover:bg-surface focus-within:bg-surface focus-within:ring-2 focus-within:ring-link sm:px-4"
     >
       <span
         aria-hidden="true"
         className={`hidden size-9 shrink-0 items-center justify-center rounded-lg sm:flex ${
-          chosen ? tone.tile : 'bg-white text-muted shadow-card'
+          chosen ? tone.tile : 'bg-surface text-muted shadow-card'
         }`}
       >
         {icon}

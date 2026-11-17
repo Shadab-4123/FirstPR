@@ -59,7 +59,7 @@ export const SearchPage = () => {
             <select
               value={filters.sort}
               onChange={(e) => update({ sort: e.target.value as SortKey })}
-              className="cursor-pointer appearance-none rounded-lg border border-rule bg-white py-1.5 pr-8 pl-3 font-semibold text-body shadow-card"
+              className="cursor-pointer appearance-none rounded-lg border border-rule bg-surface py-1.5 pr-8 pl-3 font-semibold text-body shadow-card"
             >
               {Object.entries(SORT_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>

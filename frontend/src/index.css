@@ -1,44 +1,105 @@
 @import 'tailwindcss';
 
-/* "Warm Editorial" design system (stitch_firstpr_web_app_ui/warm_editorial_open_source/DESIGN.md).
-   Difficulty text colours are one step darker than the design file so they pass WCAG AA
-   (4.5:1) on their tinted backgrounds. */
+/* "Warm Editorial" design system (stitch_firstpr_web_app_ui/warm_editorial_open_source/DESIGN.md),
+   on cream paper rather than bright white, with a warm dark theme below.
+   Every text/background pair here passes WCAG AA (4.5:1) in both themes.
+   Text colours (link, easy, ...) and solid fills behind white text (accent, *-fill) are
+   separate tokens: in the dark theme text gets lighter, while fills must stay dark. */
 @theme {
   --font-display: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-paper: #f8f9ff; /* canvas */
-  --color-well: #eff4ff; /* inset wells, quiet chips */
-  --color-ink: #0f172a; /* headings */
-  --color-body: #1e293b; /* body copy */
-  --color-muted: #64748b;
-  --color-rule: #e7e5e4; /* hairline borders */
-  --color-rule-strong: #cbd5e1;
+  --color-paper: #faf6ee; /* canvas: cream */
+  --color-surface: #fffcf6; /* cards, header, inputs */
+  --color-well: #f3ede1; /* inset wells, quiet chips */
+  --color-ink: #1c1917; /* headings */
+  --color-body: #292524; /* body copy */
+  --color-muted: #6b6358;
+  --color-rule: #e8e1d3; /* hairline borders */
+  --color-rule-strong: #d4cab6;
+  --color-code: #1e293b; /* code blocks (dark in both themes) */
 
-  --color-link: #4338ca; /* primary / interactive */
+  --color-link: #4338ca; /* links and interactive text */
   --color-link-hover: #3730a3;
-  --color-link-soft: #eef2ff;
+  --color-link-soft: #ecebf8;
   --color-link-line: #818cf8;
+  --color-accent: #4338ca; /* solid buttons, with white text */
+  --color-accent-hover: #3730a3;
 
   --color-easy: #047857;
-  --color-easy-soft: #ecfdf5;
+  --color-easy-soft: #e8f4ec;
   --color-easy-line: #a7f3d0;
   --color-easy-dot: #10b981;
+  --color-easy-fill: #047857;
   --color-medium: #b45309;
-  --color-medium-soft: #fffbeb;
+  --color-medium-soft: #fdf6e7;
   --color-medium-line: #fde68a;
   --color-medium-dot: #f59e0b;
+  --color-medium-fill: #b45309;
   --color-hard: #b91c1c;
-  --color-hard-soft: #fef2f2;
+  --color-hard-soft: #fbe9e5;
   --color-hard-line: #fecaca;
   --color-hard-dot: #dc2626;
+  --color-hard-fill: #b91c1c;
 
-  --shadow-card: 0 1px 3px rgb(30 41 59 / 0.04), 0 4px 12px rgb(30 41 59 / 0.02);
-  --shadow-lift: 0 4px 6px -1px rgb(30 41 59 / 0.05), 0 10px 20px -3px rgb(30 41 59 / 0.04);
+  /* Contribution graph: no contributions, then four greens, light to dark. */
+  --color-graph-0: #ebe4d6;
+  --color-graph-1: #10b981;
+  --color-graph-2: #059669;
+  --color-graph-3: #047857;
+  --color-graph-4: #064e3b;
+
+  --shadow-card: 0 1px 3px rgb(68 52 26 / 0.05), 0 4px 12px rgb(68 52 26 / 0.03);
+  --shadow-lift: 0 4px 6px -1px rgb(68 52 26 / 0.07), 0 10px 20px -3px rgb(68 52 26 / 0.05);
+}
+
+/* Warm charcoal, not pure black: easier on the eyes, and the cards still read as cards. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-paper: #16140f;
+  --color-surface: #1f1c17;
+  --color-well: #2a261f;
+  --color-ink: #f5efe3;
+  --color-body: #ddd5c6;
+  --color-muted: #a59d8e;
+  --color-rule: #353028;
+  --color-rule-strong: #4b443a;
+  --color-code: #0e0d0a;
+
+  --color-link: #a5b4fc;
+  --color-link-hover: #c7d2fe;
+  --color-link-soft: #26254a;
+  --color-link-line: #6366f1;
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+
+  --color-easy: #6ee7b7;
+  --color-easy-soft: #13291f;
+  --color-easy-line: #1f5c43;
+  --color-easy-dot: #34d399;
+  --color-medium: #fcd34d;
+  --color-medium-soft: #2e2412;
+  --color-medium-line: #6b4f15;
+  --color-medium-dot: #f59e0b;
+  --color-hard: #fca5a5;
+  --color-hard-soft: #33191a;
+  --color-hard-line: #7a2a24;
+  --color-hard-dot: #f87171;
+
+  /* Dark mode: the busiest days are the brightest. */
+  --color-graph-0: #2a261f;
+  --color-graph-1: #0e4429;
+  --color-graph-2: #006d32;
+  --color-graph-3: #26a641;
+  --color-graph-4: #39d353;
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 10px 20px -3px rgb(0 0 0 / 0.3);
 }
 
 html {
+  color-scheme: light;
   background: var(--color-paper);
   color: var(--color-body);
   font-family: var(--font-sans);

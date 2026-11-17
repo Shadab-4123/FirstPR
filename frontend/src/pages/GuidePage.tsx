@@ -23,10 +23,10 @@ export const GuidePage = () => (
         Your first pull request, in 6 steps
       </h1>
       <ul className="mt-5 flex flex-wrap justify-center gap-2 text-xs font-medium">
-        <li className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 shadow-card">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 shadow-card">
           <ClockIcon className="size-3.5 text-link" /> About 5 minutes to read
         </li>
-        <li className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 shadow-card">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 shadow-card">
           <CheckIcon className="size-3.5 text-easy" /> No Git experience assumed
         </li>
       </ul>
@@ -146,7 +146,7 @@ git push -u origin fix-typo-in-readme`}
           <p className="mt-1 text-sm text-muted">Maintainers want you to succeed. Here's how to handle the three most common roadblocks.</p>
           <ul className="mt-5 grid gap-3 sm:grid-cols-3">
             {STUCK.map(([title, text]) => (
-              <li key={title} className="rounded-xl bg-white p-4 shadow-card">
+              <li key={title} className="rounded-xl bg-surface p-4 shadow-card">
                 <p className="font-semibold text-ink">{title}</p>
                 <p className="mt-1 text-sm leading-relaxed text-muted">{text}</p>
               </li>
@@ -154,7 +154,7 @@ git push -u origin fix-typo-in-readme`}
           </ul>
         </section>
 
-        <section className="mt-6 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-link p-6 text-white sm:p-8">
+        <section className="mt-6 flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-accent p-6 text-white sm:p-8">
           <div>
             <p className="font-mono text-xs tracking-wide text-white/70 uppercase">Ready for step 1?</p>
             <p className="mt-1 text-2xl font-bold">Put it into practice</p>
@@ -162,7 +162,7 @@ git push -u origin fix-typo-in-readme`}
           </div>
           <Link
             to="/explore/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-link transition hover:bg-link-soft"
+            className="inline-flex items-center gap-2 rounded-lg bg-surface px-5 py-2.5 text-sm font-semibold text-link transition hover:bg-link-soft"
           >
             Find your first issue
             <ArrowRightIcon />
@@ -184,7 +184,7 @@ const Step = ({ n, title, children }: { n: number; title: string; children: Reac
     <div className="flex items-start gap-4">
       <span
         aria-hidden="true"
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-link text-lg font-bold text-white"
+        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-lg font-bold text-white"
       >
         {n}
       </span>
@@ -213,7 +213,7 @@ const Terminal = ({ children }: { children: string }) => {
       setTimeout(() => setCopied(false), 1500)
     })
   return (
-    <div className="overflow-hidden rounded-xl bg-[#1e293b]">
+    <div className="overflow-hidden rounded-xl bg-code">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
         <span aria-hidden="true" className="flex gap-1.5">
           <span className="size-2.5 rounded-full bg-[#f87171]" />

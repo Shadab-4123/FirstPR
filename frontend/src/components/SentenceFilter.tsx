@@ -32,7 +32,7 @@ const InlineSelect = ({ label, value, onChange, options }: InlineSelectProps) =>
       onChange={(e) => onChange(e.target.value)}
       aria-label={label}
       className="cursor-pointer appearance-none [field-sizing:content] rounded-xl border-b-2 border-link-line bg-link-soft py-0.5 pr-9 pl-3
-        font-semibold text-link transition hover:bg-[#e0e7ff]"
+        font-semibold text-link transition hover:bg-link-line/25"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value} className="text-base font-normal text-body">

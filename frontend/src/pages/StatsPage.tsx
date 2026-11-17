@@ -251,7 +251,7 @@ const MetricBars = ({
           </div>
           <div className="mt-1 h-2 rounded-full bg-well">
             <div
-              className={`h-2 rounded-full ${row.strong ? 'bg-link' : 'bg-muted/40'}`}
+              className={`h-2 rounded-full ${row.strong ? 'bg-accent' : 'bg-muted/40'}`}
               style={{ width: `${Math.max(row.value * 100, 0.5)}%` }}
             />
           </div>
@@ -305,7 +305,7 @@ const CountBars = ({ title, rows }: { title: string; rows: { label: string; coun
                 <span className="tabular-nums text-muted">{row.count.toLocaleString()}</span>
               </div>
               <div className="mt-1 h-2 rounded-full bg-well">
-                <div className="h-2 rounded-full bg-link" style={{ width: `${(row.count / max) * 100}%` }} />
+                <div className="h-2 rounded-full bg-accent" style={{ width: `${(row.count / max) * 100}%` }} />
               </div>
             </li>
           ))}

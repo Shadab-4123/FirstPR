@@ -31,7 +31,7 @@ export const StatusPicker = ({
             <span
               aria-hidden="true"
               className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
-                checked ? 'bg-link text-white' : 'bg-white text-muted'
+                checked ? 'bg-accent text-white' : 'bg-surface text-muted'
               }`}
             >
               {i + 1}

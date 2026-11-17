@@ -7,6 +7,7 @@ import { timeAgo } from '../lib/format'
 import { useMe, useSaved } from '../lib/saved'
 import { AccountMenu } from './AccountMenu'
 import { PullRequestIcon } from './icons'
+import { ThemeToggle } from './ThemeToggle'
 import { pageWidth } from './ui'
 
 const NAV = [
@@ -42,10 +43,10 @@ export const SiteHeader = () => {
 
   return (
     <header>
-      <div className="border-b border-rule bg-white">
+      <div className="border-b border-rule bg-surface">
         <div className={`${pageWidth} flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-3`}>
           <Link to="/" className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-link text-white">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-white">
               <PullRequestIcon className="size-[18px]" />
             </span>
             <span className="text-lg font-bold tracking-tight text-ink">FirstPR</span>
@@ -81,7 +82,10 @@ export const SiteHeader = () => {
               </ul>
             </nav>
           </div>
-          <AccountMenu />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <AccountMenu />
+          </div>
         </div>
       </div>
       <FreshnessStrip />
@@ -110,7 +114,7 @@ const FreshnessStrip = () => {
 }
 
 const SiteFooter = () => (
-  <footer className="border-t border-rule bg-white">
+  <footer className="border-t border-rule bg-surface">
     <div className={`${pageWidth} flex flex-wrap items-end justify-between gap-6 py-10`}>
       <div>
         <p className="font-bold text-ink">FirstPR</p>

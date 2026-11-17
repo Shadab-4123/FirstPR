@@ -2,9 +2,9 @@ import type { Difficulty } from '../api/client'
 
 const FILLED: Record<Difficulty, number> = { easy: 1, medium: 2, hard: 3 }
 const LOOK: Record<Difficulty, { pill: string; dot: string }> = {
-  easy: { pill: 'border-easy-line bg-easy-soft text-easy', dot: 'bg-easy' },
-  medium: { pill: 'border-medium-line bg-medium-soft text-medium', dot: 'bg-medium' },
-  hard: { pill: 'border-hard-line bg-hard-soft text-hard', dot: 'bg-hard' },
+  easy: { pill: 'border-easy-line bg-easy-soft text-easy', dot: 'bg-easy-fill' },
+  medium: { pill: 'border-medium-line bg-medium-soft text-medium', dot: 'bg-medium-fill' },
+  hard: { pill: 'border-hard-line bg-hard-soft text-hard', dot: 'bg-hard-fill' },
 }
 
 /** Pill with 1–3 filled dots and the word, so the size never depends on colour alone. */

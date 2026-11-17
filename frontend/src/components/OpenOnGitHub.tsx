@@ -45,10 +45,10 @@ export const OpenOnGitHub = ({ url }: { url: string }) => {
         aria-labelledby="sign-in-title"
         // A click on the backdrop lands on the dialog itself: treat it like "close".
         onClick={(e) => e.target === e.currentTarget && close()}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-rule bg-white p-0 shadow-lift backdrop:bg-ink/40 backdrop:backdrop-blur-sm"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border border-rule bg-surface p-0 shadow-lift backdrop:bg-black/50 backdrop:backdrop-blur-sm"
       >
         <div className="p-6 sm:p-8">
-          <span className="flex size-11 items-center justify-center rounded-xl bg-link text-white">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-white">
             <PullRequestIcon className="size-6" />
           </span>
           <h2 id="sign-in-title" className="mt-4 text-xl font-bold tracking-tight text-ink">

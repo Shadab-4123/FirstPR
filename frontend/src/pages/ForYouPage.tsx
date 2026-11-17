@@ -145,7 +145,7 @@ const LevelSwitch = ({
         <label
           key={lv}
           className="cursor-pointer rounded-lg px-3.5 py-1.5 text-sm text-body transition hover:text-link
-            has-checked:bg-white has-checked:font-semibold has-checked:text-link has-checked:shadow-card
+            has-checked:bg-surface has-checked:font-semibold has-checked:text-link has-checked:shadow-card
             has-focus-visible:outline-2 has-focus-visible:outline-link"
         >
           <input
@@ -219,7 +219,7 @@ const SignedOut = () => (
   </Notice>
 )
 
-const BAR_COLORS = ['bg-easy', 'bg-link', 'bg-link-line', 'bg-medium-dot', 'bg-muted']
+const BAR_COLORS = ['bg-easy-fill', 'bg-accent', 'bg-link-line', 'bg-medium-dot', 'bg-muted']
 
 /** The language shares as one stacked bar, with a legend that repeats the numbers. */
 const LanguageBar = ({ languages }: { languages: SkillProfile['languages'] }) => (

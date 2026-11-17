@@ -52,19 +52,19 @@ export const LEVEL_LOOK: Record<Level, { rule: string; badge: string; bar: strin
   new: {
     rule: 'border-t-easy-dot',
     badge: 'bg-easy-soft text-easy',
-    bar: 'bg-easy',
-    button: 'bg-easy hover:bg-[#065f46]',
+    bar: 'bg-easy-fill',
+    button: 'bg-easy-fill hover:opacity-90',
   },
   some: {
     rule: 'border-t-medium-dot',
     badge: 'bg-medium-soft text-medium',
-    bar: 'bg-medium',
-    button: 'bg-medium hover:bg-[#92400e]',
+    bar: 'bg-medium-fill',
+    button: 'bg-medium-fill hover:opacity-90',
   },
   experienced: {
     rule: 'border-t-link',
     badge: 'bg-link-soft text-link',
-    bar: 'bg-link',
-    button: 'bg-link hover:bg-link-hover',
+    bar: 'bg-accent',
+    button: 'bg-accent hover:bg-accent-hover',
   },
 }

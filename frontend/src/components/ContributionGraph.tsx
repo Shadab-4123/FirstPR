@@ -6,7 +6,7 @@ import { formatDay, monthLabels, monthlyTotals, weekday } from '../lib/contribut
 /** GitHub's five shades as one green ramp, darker = more. Checked with the dataviz validator:
     one hue, lightness falls step by step, and the palest green clears 2:1 on white.
     Level 0 is the neutral "nothing that day" grey, not part of the ramp. */
-const SHADES = ['bg-[#e7e5e4]', 'bg-[#10b981]', 'bg-[#059669]', 'bg-[#047857]', 'bg-[#064e3b]']
+const SHADES = ['bg-graph-0', 'bg-graph-1', 'bg-graph-2', 'bg-graph-3', 'bg-graph-4']
 
 const CELL = 12 // px, plus a 3 px gap: 53 weeks ≈ 800 px, the width of GitHub's own graph
 const DAY_LABELS = [
@@ -51,7 +51,7 @@ export const ContributionGraph = ({ weeks }: { weeks: ContributionDay[][] }) => 
             {/* Weekday names */}
             {/* Pinned to the left, so the labels stay put while the weeks scroll on a phone. */}
             <div
-              className="sticky left-0 z-[1] grid bg-white text-xs text-muted"
+              className="sticky left-0 z-[1] grid bg-surface text-xs text-muted"
               style={{ gridTemplateRows: `repeat(7, ${CELL}px)`, rowGap: 3 }}
               aria-hidden="true"
             >
@@ -95,7 +95,7 @@ export const ContributionGraph = ({ weeks }: { weeks: ContributionDay[][] }) => 
           {hover && (
             <p
               role="status"
-              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-ink px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lift"
+              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-ink px-2.5 py-1.5 text-xs whitespace-nowrap text-paper shadow-lift"
               style={{ left: hover.x, top: hover.y - 6 }}
             >
               <strong className="font-semibold">{hover.day.count === 0 ? 'No contributions' : contributions(hover.day.count)}</strong>{' '}

@@ -246,7 +246,7 @@ const Reasons = ({ items }: { items: string[] }) =>
 const HealthBar = ({ score }: { score: number }) => (
   <div className="flex items-center gap-3">
     <div className="h-2 flex-1 rounded-full bg-well" aria-hidden="true">
-      <div className="h-2 rounded-full bg-easy" style={{ width: `${score}%` }} />
+      <div className="h-2 rounded-full bg-easy-fill" style={{ width: `${score}%` }} />
     </div>
     <span className="text-lg font-bold text-ink tabular-nums">
       {score}
@@ -305,7 +305,7 @@ const GuideCallout = () => (
     </div>
     <Link
       to="/guide"
-      className="inline-flex items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-link shadow-card hover:bg-white/80"
+      className="inline-flex items-center gap-1.5 rounded-lg bg-surface px-4 py-2 text-sm font-semibold text-link shadow-card hover:bg-surface/80"
     >
       Read the guide
       <ArrowRightIcon />
@@ -328,7 +328,7 @@ const IssueBody = ({ markdown }: { markdown: string }) => (
       [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-ink
       [&_h3]:font-semibold [&_h3]:text-ink [&_h4]:font-semibold
       [&_li]:mt-1 [&_li]:marker:text-link [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6
-      [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-[#1e293b] [&_pre]:p-4 [&_pre]:text-white
+      [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-code [&_pre]:p-4 [&_pre]:text-white
       [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white
       [&_table]:block [&_table]:overflow-x-auto [&_td]:border [&_td]:border-rule [&_td]:px-2
       [&_th]:border [&_th]:border-rule [&_th]:px-2"

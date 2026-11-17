@@ -87,7 +87,7 @@ const LevelIssues = ({ level }: { level: Level }) => {
           <p className="mt-1 text-sm text-muted">{info.what}</p>
         </div>
         {summary && (
-          <p className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-white px-3 py-1 text-sm font-semibold text-ink">
+          <p className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-surface px-3 py-1 text-sm font-semibold text-ink">
             <CheckCircleIcon className="size-4 text-easy" />
             {summary.total.toLocaleString()} open, unclaimed issues
           </p>
@@ -184,7 +184,7 @@ const KindChip = ({ label, count, active, onClick }: KindChipProps) => (
       aria-pressed={active}
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${
-        active ? 'border-link bg-link text-white' : 'border-rule bg-white text-body hover:border-link-line hover:text-link'
+        active ? 'border-link bg-accent text-white' : 'border-rule bg-surface text-body hover:border-link-line hover:text-link'
       }`}
     >
       {label}
@@ -202,7 +202,7 @@ const KindChip = ({ label, count, active, onClick }: KindChipProps) => (
 const GuideCallout = () => (
   <aside className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-link-line/40 bg-gradient-to-r from-link-soft to-easy-soft p-5">
     <div className="flex items-center gap-4">
-      <span className="flex size-11 items-center justify-center rounded-xl bg-white text-link shadow-card">
+      <span className="flex size-11 items-center justify-center rounded-xl bg-surface text-link shadow-card">
         <BookIcon className="size-5" />
       </span>
       <div>

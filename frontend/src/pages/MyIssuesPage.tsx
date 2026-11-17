@@ -46,7 +46,7 @@ export const MyIssuesPage = () => {
 /** Column colours, in journey order. */
 const COLUMN_LOOK: Record<SavedStatus, { dot: string; count: string; frame: string }> = {
   saved: { dot: 'bg-muted', count: 'bg-well text-body', frame: 'bg-well/50' },
-  working: { dot: 'bg-link', count: 'bg-link-soft text-link', frame: 'bg-link-soft/40' },
+  working: { dot: 'bg-accent', count: 'bg-link-soft text-link', frame: 'bg-link-soft/40' },
   pr_opened: { dot: 'bg-medium-dot', count: 'bg-medium-soft text-medium', frame: 'bg-medium-soft/50' },
   merged: { dot: 'bg-easy-dot', count: 'bg-easy-soft text-easy', frame: 'bg-easy-soft/50' },
 }

@@ -20,7 +20,7 @@ export const Pagination = ({ page, pageSize, total, onPage }: PaginationProps) =
 
   const step =
     'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-body transition ' +
-    'enabled:hover:bg-white enabled:hover:shadow-card disabled:text-muted/60'
+    'enabled:hover:bg-surface enabled:hover:shadow-card disabled:text-muted/60'
 
   return (
     <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-rule pt-6">
@@ -43,7 +43,7 @@ export const Pagination = ({ page, pageSize, total, onPage }: PaginationProps) =
                 aria-current={p === page ? 'page' : undefined}
                 aria-label={`Page ${p}`}
                 className={`min-w-9 rounded-lg px-2 py-1.5 text-sm font-semibold tabular-nums transition ${
-                  p === page ? 'bg-link text-white' : 'bg-white text-body shadow-card hover:bg-link-soft'
+                  p === page ? 'bg-accent text-white' : 'bg-surface text-body shadow-card hover:bg-link-soft'
                 }`}
               >
                 {p}
