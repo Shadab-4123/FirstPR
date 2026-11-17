@@ -2,7 +2,7 @@
 
 **Find open-source issues you can actually fix: open, unclaimed, in active repos, with an honest difficulty estimate.**
 
-**Live demo:** https://firstpr-web.onrender.com · **API docs:** https://firstpr-api-5lk3.onrender.com/docs · **Numbers:** [stats page](https://firstpr-web.onrender.com/stats)
+**Live demo:** https://firstpr.pages.dev · **API docs:** https://firstpr-api-5lk3.onrender.com/docs · **Numbers:** [stats page](https://firstpr.pages.dev/stats)
 
 > Hosted on Render's free tier: if the site has been idle, the first search can take ~50 s while the API wakes up.
 
@@ -23,7 +23,7 @@ Sites like goodfirstissue.dev list issues that carry a `good first issue` label.
 - **Estimate difficulty** with a model trained on 2,633 past issues, labelled by the size of the PRs that closed them. It shows its confidence and reasons ([evaluation](ml/EVAL.md)).
 - **Score repo health** from 0 to 100 (recent pushes, stars, forks, a contributing guide), with the points for each shown.
 - **Sign in with GitHub** to get a *For you* list ranked by the languages and experience your public GitHub activity shows, and to track issues from Saved → Working on it → PR opened → Merged.
-- **Show the numbers** on a public [stats page](https://firstpr-web.onrender.com/stats): index size, sync freshness, recent runs, and the model against its baselines.
+- **Show the numbers** on a public [stats page](https://firstpr.pages.dev/stats): index size, sync freshness, recent runs, and the model against its baselines.
 
 ## Status
 
@@ -86,7 +86,7 @@ flowchart LR
 
 ## Results
 
-All measured. Index numbers are from the live [stats page](https://firstpr-web.onrender.com/stats) on 2026-11-17.
+All measured. Index numbers are from the live [stats page](https://firstpr.pages.dev/stats) on 2026-11-17.
 
 | Metric | Value |
 | --- | --- |

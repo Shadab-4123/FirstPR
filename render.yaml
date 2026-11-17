@@ -1,5 +1,6 @@
 # Render Blueprint: Dashboard -> New -> Blueprint -> pick this repo.
-# The database stays on Supabase; Render only runs the API and the static site.
+# The database stays on Supabase; Render runs the API. The website is on Cloudflare Pages
+# (https://firstpr.pages.dev, see frontend/functions/); firstpr-web only redirects there.
 services:
   - type: web
     name: firstpr-api
@@ -23,8 +24,8 @@ services:
         sync: false
       - key: TOKEN_ENCRYPTION_KEY
         sync: false
-      - key: APP_URL
-        value: https://firstpr-web.onrender.com
+      - key: APP_URL  # the website: sign-in returns here
+        value: https://firstpr.pages.dev
       # Error reports (sentry.io). Leave SENTRY_DSN empty to send nothing.
       - key: SENTRY_DSN
         sync: false
@@ -43,11 +44,8 @@ services:
       - key: VITE_SENTRY_DSN
         sync: false
     routes:
-      # Same origin for the browser: /api/* is forwarded to the API service.
-      # Render appended "-5lk3" because "firstpr-api" was already taken.
-      - type: rewrite
-        source: /api/*
-        destination: https://firstpr-api-5lk3.onrender.com/api/*
-      - type: rewrite
+      # The site moved to Cloudflare Pages (2026-11-17). Old links keep working:
+      # every path, /api included, redirects to the same path there.
+      - type: redirect
         source: /*
-        destination: /index.html
+        destination: https://firstpr.pages.dev/*

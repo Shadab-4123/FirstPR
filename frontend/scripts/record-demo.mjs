@@ -1,6 +1,6 @@
 // Records the README demo: search → filter → open an issue, on the live site.
 //
-//   cd frontend && node scripts/record-demo.mjs [https://firstpr-web.onrender.com]
+//   cd frontend && node scripts/record-demo.mjs [https://firstpr.pages.dev]
 //
 // Writes a .webm next to the repo's docs/; scripts/demo-gif.sh turns it into docs/demo.gif.
 // Scripted rather than screen-recorded, so it can be redone whenever the UI changes.
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 
 import { chromium } from '@playwright/test'
 
-const SITE = process.argv[2] ?? 'https://firstpr-web.onrender.com'
+const SITE = process.argv[2] ?? 'https://firstpr.pages.dev'
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '../../docs/.demo-video')
 const SIZE = { width: 1200, height: 750 }
 
