@@ -6,12 +6,25 @@
 
 ![FirstPR demo: choose Python and easy, search "docs", open an issue to see that it's still unclaimed, its size, repo health and what to do](docs/demo.gif)
 
+## Why
+
+Getting hired is hard right now, for freshers and experienced developers alike, and more and more companies ask for open-source contributions as proof that you can work in a real codebase with real reviewers. The usual advice is "find an issue labelled `good first issue` and start there". In practice:
+
+- **Many of those issues are already taken.** Someone commented "I'll take this" weeks ago, or a pull request is already open.
+- **Many sit in repos nobody maintains.** A pull request there may never be reviewed.
+- **Many are harder than the label says.** The "easy" issue turns out to need changes across a dozen files.
+
+Sites like goodfirstissue.dev just repeat GitHub's labels. FirstPR keeps its own synced copy of these issues, hides the ones that are no longer available, and scores each one, with reasons, so you can see why it's ranked where it is. The goal: spend your time on a first contribution that can actually get merged.
+
 ## What it does
 
-- **Search and filter** good-first-issues by language, difficulty, stars and text.
-- **Hides issues you can't take:** closed, assigned, claimed in a comment, or already linked to a PR.
-- **Estimates difficulty** with a model trained on real past issues ([evaluation](ml/EVAL.md)), and scores each repo's health.
-- **Sign in with GitHub** for a *For you* list, issue tracking and your contribution graph.
+- **Search and filter** by language, difficulty, stars, freshness and full text. Every filter is in the URL, so a search can be shared.
+- **Hide issues you can't take**: closed, assigned, claimed in a comment ("I'll take this"), already linked to a PR, or no longer labelled. A daily re-check keeps this current.
+- **Estimate difficulty** with a model trained on 2,633 past issues, labelled by the size of the PRs that closed them. It shows its confidence and reasons ([evaluation](ml/EVAL.md)).
+- **Score repo health** from 0 to 100 (recent pushes, stars, forks, a contributing guide), with the points for each shown.
+- **Explore by level**: issues grouped for people who are new to open source, have some experience, or are experienced.
+- **Sign in with GitHub** to get a *For you* list ranked by the languages and experience your public GitHub activity shows, to track issues from Saved → Working on it → PR opened → Merged, and to see your contribution graph.
+- **Show the numbers** on a public [stats page](https://firstpr.pages.dev/stats): index size, sync freshness, recent runs, and the model against its baselines.
 
 ## Architecture
 
