@@ -1,7 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router'
 
-import { api, type Kind, type Level } from '../api/client'
+import { api, type Difficulty, type Kind, type Level } from '../api/client'
+import { type BarFilters, FilterBar } from '../components/FilterBar'
 import { IssueRow } from '../components/IssueRow'
 import { Pagination } from '../components/Pagination'
 import { ArrowRightIcon, BookIcon, CheckCircleIcon } from '../components/icons'
@@ -20,28 +21,51 @@ export const LevelPage = () => {
 
 const LevelIssues = ({ level }: { level: Level }) => {
   const info = LEVEL_INFO[level]
-  // The chosen type and page live in the URL, like the search page's filters.
+  // The chosen type, filters and page live in the URL, like the search page's filters.
   const [params, setParams] = useSearchParams()
   const kindParam = params.get('kind')
   const kind = kindParam && kindParam in KIND_LABELS ? (kindParam as Kind) : undefined
   const page = Math.max(1, Number(params.get('page')) || 1)
+  const difficultyParam = params.get('difficulty') ?? ''
+  const filters: BarFilters = {
+    language: params.get('language') ?? '',
+    difficulty: (['easy', 'medium', 'hard'].includes(difficultyParam) ? difficultyParam : '') as Difficulty | '',
+    minStars: Math.max(0, Number(params.get('min_stars')) || 0),
+  }
+  const filtered = Boolean(filters.language || filters.difficulty || filters.minStars)
 
+  const meta = useQuery({ queryKey: ['meta'], queryFn: api.filterMeta, staleTime: 60_000 })
   const levels = useQuery({ queryKey: ['levels'], queryFn: api.levels, staleTime: 60_000 })
   const summary = levels.data?.find((s) => s.level === level)
-  const query = { level, kind, page, page_size: PAGE_SIZE, sort: 'relevance' as const }
+  const query = {
+    level,
+    kind,
+    page,
+    page_size: PAGE_SIZE,
+    sort: 'relevance' as const,
+    ...(filters.language && { language: filters.language }),
+    ...(filters.difficulty && { difficulty: [filters.difficulty] }),
+    ...(filters.minStars && { min_stars: filters.minStars }),
+  }
   const issues = useQuery({
     queryKey: ['issues', query],
     queryFn: () => api.searchIssues(query),
     placeholderData: keepPreviousData,
   })
 
-  const choose = (next: { kind?: Kind; page?: number }) => {
-    const entries: [string, string][] = []
+  /** Any change except paging goes back to page 1. */
+  const choose = (next: { kind?: Kind; page?: number } & Partial<BarFilters>) => {
     const nextKind = 'kind' in next ? next.kind : kind
+    const f = { ...filters, ...next }
+    const entries: [string, string][] = []
     if (nextKind) entries.push(['kind', nextKind])
+    if (f.language) entries.push(['language', f.language])
+    if (f.difficulty) entries.push(['difficulty', f.difficulty])
+    if (f.minStars) entries.push(['min_stars', String(f.minStars)])
     if (next.page && next.page > 1) entries.push(['page', String(next.page)])
     setParams(entries)
   }
+  const clearFilters = () => choose({ language: '', difficulty: '', minStars: 0 })
   const total = issues.data?.total ?? 0
 
   const step = LEVELS.indexOf(level) + 1
@@ -72,15 +96,33 @@ const LevelIssues = ({ level }: { level: Level }) => {
 
       {level === 'new' && <GuideCallout />}
 
-      <nav aria-label="Kind of work" className="mt-8">
-        <p className="mb-2 text-xs font-semibold tracking-wider text-muted uppercase">Filter by kind of work</p>
+      <section aria-label="Filter these issues" className="mt-8 lg:max-w-3xl">
+        <div className="mb-2 flex items-baseline justify-between gap-3">
+          <p className="text-sm font-semibold text-ink">Narrow it down</p>
+          {filtered && (
+            <button type="button" onClick={clearFilters} className="text-xs font-semibold text-link hover:underline">
+              Clear filters
+            </button>
+          )}
+        </div>
+        <FilterBar filters={filters} meta={meta.data} onChange={(changes) => choose(changes)} />
+      </section>
+
+      <nav aria-label="Kind of work" className="mt-6">
+        <p className="mb-2 text-sm font-semibold text-ink">Kind of work</p>
         <ul className="flex flex-wrap gap-2">
-          <KindChip label="Everything" count={summary?.total} active={!kind} onClick={() => choose({ kind: undefined })} />
+          {/* Counts are for the whole level, so they'd mislead once other filters are set. */}
+          <KindChip
+            label="Everything"
+            count={filtered ? undefined : summary?.total}
+            active={!kind}
+            onClick={() => choose({ kind: undefined })}
+          />
           {summary?.kinds.map((k) => (
             <KindChip
               key={k.value}
               label={kindLabel(k.value)}
-              count={k.count}
+              count={filtered ? undefined : k.count}
               active={kind === k.value}
               onClick={() => choose({ kind: k.value as Kind })}
             />
@@ -94,8 +136,19 @@ const LevelIssues = ({ level }: { level: Level }) => {
         ) : issues.isError ? (
           <ErrorState message={issues.error.message} onRetry={() => issues.refetch()} />
         ) : total === 0 ? (
-          <Notice title="Nothing here yet.">
-            {level === 'experienced'
+          <Notice
+            title={filtered ? 'No issues match these filters.' : 'Nothing here yet.'}
+            action={
+              filtered && (
+                <button type="button" onClick={clearFilters} className={btnPrimary}>
+                  Clear filters
+                </button>
+              )
+            }
+          >
+            {filtered
+              ? 'Try another language, any size, or fewer stars.'
+              : level === 'experienced'
               ? 'Experienced-level issues come from "help wanted" labels and bugs in big projects, which the daily sync is starting to collect. Check back tomorrow.'
               : 'Try another kind of work, or another level.'}
           </Notice>

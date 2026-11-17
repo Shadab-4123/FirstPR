@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react'
 import type { Difficulty, FilterMeta } from '../api/client'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import type { IssueFilters } from '../hooks/useIssueFilters'
+import { DIFFICULTY_OPTIONS, type FilterOption, STAR_OPTIONS, languageOptions } from '../lib/filterOptions'
+import { FilterBar } from './FilterBar'
 import { ChevronDownIcon, RefreshIcon, SearchIcon } from './icons'
 import { card, eyebrow } from './ui'
-
-const STAR_OPTIONS = [0, 100, 1000, 10000]
 
 /** One-click starting points: each is just a combination of the filters below. */
 const PRESETS: { label: string; filters: Partial<IssueFilters> }[] = [
@@ -20,7 +20,7 @@ type InlineSelectProps = {
   label: string
   value: string
   onChange: (value: string) => void
-  options: { value: string; text: string }[]
+  options: FilterOption[]
 }
 
 /** A real <select>, styled as a tinted word inside the sentence. */
@@ -30,11 +30,12 @@ const InlineSelect = ({ label, value, onChange, options }: InlineSelectProps) =>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      aria-label={label}
       className="cursor-pointer appearance-none [field-sizing:content] rounded-xl border-b-2 border-link-line bg-link-soft py-0.5 pr-9 pl-3
         font-semibold text-link transition hover:bg-[#e0e7ff]"
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value}>
+        <option key={o.value} value={o.value} className="text-base font-normal text-body">
           {o.text}
         </option>
       ))}
@@ -59,20 +60,9 @@ export const SentenceFilter = ({ filters, meta, onChange, onReset }: SentenceFil
     // Only react to the user's typing settling, not to every filters change.
   }, [debouncedText]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const languages = [
-    { value: '', text: 'any language' },
-    ...(meta?.languages ?? []).map((l) => ({ value: l.value, text: l.value })),
-  ]
-  const difficulties = [
-    { value: '', text: 'any size' },
-    { value: 'easy', text: 'easy' },
-    { value: 'medium', text: 'medium-sized' },
-    { value: 'hard', text: 'harder' },
-  ]
-  const stars = STAR_OPTIONS.map((n) => ({
-    value: String(n),
-    text: n === 0 ? 'any number of' : `${n.toLocaleString()}+`,
-  }))
+  const languages = languageOptions(meta)
+  const difficulties = DIFFICULTY_OPTIONS
+  const stars = STAR_OPTIONS
   const filtered = Boolean(filters.language || filters.difficulty || filters.minStars || filters.q)
 
   return (
@@ -109,6 +99,9 @@ export const SentenceFilter = ({ filters, meta, onChange, onReset }: SentenceFil
           />{' '}
           <span className="text-muted">stars.</span>
         </p>
+
+        {/* The same filters as one plain bar, so it's obvious they can be changed. */}
+        <FilterBar filters={filters} meta={meta} onChange={onChange} className="mt-6 lg:max-w-3xl" />
 
         <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-rule pt-5">
           <span className="mr-1 text-xs font-semibold text-muted">Quick presets:</span>

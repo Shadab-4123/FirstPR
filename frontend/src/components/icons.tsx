@@ -114,3 +114,8 @@ export const RefreshIcon = (p: P) => (
     <path d="M20 11a8 8 0 0 0-14.5-4.5L4 8m0-4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16m0 4v-4h-4" />
   </Svg>
 )
+export const CodeIcon = (p: P) => (
+  <Svg {...p}>
+    <path d="m8 7-5 5 5 5M16 7l5 5-5 5" />
+  </Svg>
+)

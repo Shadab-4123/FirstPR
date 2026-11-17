@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
+import { ResultsSkeleton } from './components/ResultStates'
+import { PageLayout } from './components/SiteHeader'
 import { SearchPage } from './pages/SearchPage'
 
 // The brief pulls in a markdown renderer; load it only when someone opens an issue,
@@ -16,7 +18,18 @@ const ForYouPage = lazy(() => import('./pages/ForYouPage').then((m) => ({ defaul
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })))
 const GuidePage = lazy(() => import('./pages/GuidePage').then((m) => ({ default: m.GuidePage })))
 
-const Lazy = ({ page }: { page: ReactNode }) => <Suspense fallback={null}>{page}</Suspense>
+// While a page's code downloads, show the site frame with loading cards, not a blank screen.
+const Lazy = ({ page }: { page: ReactNode }) => (
+  <Suspense
+    fallback={
+      <PageLayout>
+        <ResultsSkeleton />
+      </PageLayout>
+    }
+  >
+    {page}
+  </Suspense>
+)
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -24,7 +37,9 @@ const queryClient = new QueryClient({
 
 export const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+    {/* Without transitions, a URL change re-renders at once. With them (the default), a second
+        filter picked right after the first was built from the stale URL and dropped the first. */}
+    <BrowserRouter useTransitions={false}>
       <Routes>
         <Route path="/" element={<SearchPage />} />
         <Route path="/issues/:id" element={<Lazy page={<IssuePage />} />} />

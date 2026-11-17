@@ -36,7 +36,7 @@ const moveTo = async (page, locator) => {
 }
 
 const choose = async (page, label, value) => {
-  const select = page.getByLabel(label)
+  const select = page.getByLabel(label, { exact: true })
   await moveTo(page, select)
   await pause(page, 250)
   await page.mouse.down()
