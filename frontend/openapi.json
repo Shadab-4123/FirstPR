@@ -868,10 +868,119 @@
           }
         }
       }
+    },
+    "/api/v1/me/contributions": {
+      "get": {
+        "tags": [
+          "for you"
+        ],
+        "summary": "Contributions",
+        "description": "The signed-in user's GitHub contribution calendar for the last year.",
+        "operationId": "contributions_api_v1_me_contributions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionCalendar"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ContributionCalendar": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "weeks": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/ContributionDay"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Weeks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "weeks"
+        ],
+        "title": "ContributionCalendar"
+      },
+      "ContributionDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count",
+          "level"
+        ],
+        "title": "ContributionDay"
+      },
       "DifficultyBreakdown": {
         "properties": {
           "label": {

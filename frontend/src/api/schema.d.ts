@@ -261,10 +261,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contributions
+         * @description The signed-in user's GitHub contribution calendar for the last year.
+         */
+        get: operations["contributions_api_v1_me_contributions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ContributionCalendar */
+        ContributionCalendar: {
+            /** Total */
+            total: number;
+            /** Weeks */
+            weeks: components["schemas"]["ContributionDay"][][];
+        };
+        /** ContributionDay */
+        ContributionDay: {
+            /** Date */
+            date: string;
+            /** Count */
+            count: number;
+            /** Level */
+            level: number;
+        };
         /** DifficultyBreakdown */
         DifficultyBreakdown: {
             /** Label */
@@ -1213,6 +1249,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SkillProfile"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    contributions_api_v1_me_contributions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContributionCalendar"];
                 };
             };
             /** @description Unauthorized */

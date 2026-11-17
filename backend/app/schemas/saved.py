@@ -48,3 +48,14 @@ class RecommendedPage(BaseModel):
     page: int
     page_size: int
     total: int
+
+
+class ContributionDay(BaseModel):
+    date: str  # YYYY-MM-DD
+    count: int
+    level: int  # 0-4: GitHub's own quartile shade
+
+
+class ContributionCalendar(BaseModel):
+    total: int
+    weeks: list[list[ContributionDay]]  # oldest first; each week Sunday to Saturday

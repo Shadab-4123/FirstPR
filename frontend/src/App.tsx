@@ -16,6 +16,7 @@ const MyIssuesPage = lazy(() =>
 )
 const ForYouPage = lazy(() => import('./pages/ForYouPage').then((m) => ({ default: m.ForYouPage })))
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })))
+const ActivityPage = lazy(() => import('./pages/ActivityPage').then((m) => ({ default: m.ActivityPage })))
 const GuidePage = lazy(() => import('./pages/GuidePage').then((m) => ({ default: m.GuidePage })))
 
 // While a page's code downloads, show the site frame with loading cards, not a blank screen.
@@ -49,6 +50,7 @@ export const App = () => (
         <Route path="/stats" element={<Lazy page={<StatsPage />} />} />
         <Route path="/for-you" element={<Lazy page={<ForYouPage />} />} />
         <Route path="/my-issues" element={<Lazy page={<MyIssuesPage />} />} />
+        <Route path="/activity" element={<Lazy page={<ActivityPage />} />} />
       </Routes>
     </BrowserRouter>
   </QueryClientProvider>

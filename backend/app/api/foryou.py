@@ -12,8 +12,14 @@ from app.auth.crypto import decrypt_token
 from app.auth.sessions import CurrentUser
 from app.db.models import Issue
 from app.schemas.issue import ErrorResponse
-from app.schemas.saved import RecommendedIssue, RecommendedPage, SkillProfile
+from app.schemas.saved import (
+    ContributionCalendar,
+    RecommendedIssue,
+    RecommendedPage,
+    SkillProfile,
+)
 from app.scoring.classify import Level
+from app.skills.contributions import GitHubUnavailable, calendar_for
 from app.skills.github import GitHubTokenRejected, refresh_skills
 from app.skills.rank import language_weights, match_reasons, recommended, recommended_count
 
@@ -74,3 +80,24 @@ async def refresh_profile(db: DB, user: CurrentUser) -> SkillProfile:
         raise HTTPException(502, "Couldn't reach GitHub. Try again in a minute.") from None
     db.refresh(user)
     return _profile_out(user.skills, user.skills_updated_at)  # type: ignore[return-value]
+
+
+@router.get("/contributions", response_model=ContributionCalendar,
+            responses={409: {"model": ErrorResponse}, 502: {"model": ErrorResponse}})
+async def contributions(user: CurrentUser) -> ContributionCalendar:
+    """The signed-in user's GitHub contribution calendar for the last year."""
+    if not user.access_token_encrypted:
+        raise HTTPException(409, "Sign out and sign in again so FirstPR can read GitHub.")
+    token = decrypt_token(user.access_token_encrypted)
+    try:
+        async with httpx.AsyncClient(timeout=15) as http:
+            calendar = await calendar_for(user.id, http, token, user.login)
+    except GitHubTokenRejected:
+        raise HTTPException(
+            409, "GitHub no longer accepts FirstPR's access. Sign out and sign in again."
+        ) from None
+    except (httpx.HTTPError, GitHubUnavailable):
+        raise HTTPException(
+            502, "Couldn't read your activity from GitHub. Try again in a minute."
+        ) from None
+    return ContributionCalendar(**calendar)

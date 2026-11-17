@@ -11,6 +11,8 @@ export type SavedIssue = components['schemas']['SavedIssueOut']
 export type SavedStatus = SavedIssue['status']
 export type RecommendedPage = components['schemas']['RecommendedPage']
 export type SkillProfile = components['schemas']['SkillProfile']
+export type ContributionCalendar = components['schemas']['ContributionCalendar']
+export type ContributionDay = components['schemas']['ContributionDay']
 export type IssueQuery = NonNullable<operations['list_issues_api_v1_issues_get']['parameters']['query']>
 export type Difficulty = NonNullable<IssueQuery['difficulty']>[number]
 export type SortKey = NonNullable<IssueQuery['sort']>
@@ -90,6 +92,7 @@ export const api = {
   recommended: (query: { level?: Level; page?: number }) => getJson<RecommendedPage>('/me/recommended', query),
   /** Re-read public repos and merged PRs on GitHub. */
   refreshProfile: () => send<SkillProfile>('POST', '/me/profile/refresh') as Promise<SkillProfile>,
+  contributions: () => getJson<ContributionCalendar>('/me/contributions'),
   logout: async () => {
     await fetch(`${BASE}/api/v1/auth/logout`, { method: 'POST' })
   },

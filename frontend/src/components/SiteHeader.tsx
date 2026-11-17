@@ -18,6 +18,7 @@ const NAV = [
 const SIGNED_IN_NAV = [
   { to: '/for-you', label: 'For you', end: false },
   { to: '/my-issues', label: 'My issues', end: false },
+  { to: '/activity', label: 'Activity', end: false },
 ]
 
 const STATS_NAV = { to: '/stats', label: 'Stats', end: false }
