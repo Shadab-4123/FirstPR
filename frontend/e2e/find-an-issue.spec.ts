@@ -19,10 +19,16 @@ test('search, read an issue brief, and come back to the same results', async ({ 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Add site: Threads')
   await expect(page.getByText('Still open and unclaimed.')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'What this issue is about' })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Open on GitHub' })).toHaveAttribute(
+  // Signed out: GitHub is one step away, behind an offer to sign in first.
+  await page.getByRole('button', { name: 'Open on GitHub' }).click()
+  const offer = page.getByRole('dialog', { name: 'Track your open source journey' })
+  await expect(offer).toBeVisible()
+  await expect(offer.getByRole('link', { name: 'Later, just open on GitHub' })).toHaveAttribute(
     'href',
     /^https:\/\/github\.com\/.+\/issues\/10$/,
   )
+  await page.keyboard.press('Escape')
+  await expect(offer).toBeHidden()
   await expect(page.getByText('to save this issue and track your progress.')).toBeVisible()
 
   await page.getByRole('button', { name: '← Back to results' }).click()

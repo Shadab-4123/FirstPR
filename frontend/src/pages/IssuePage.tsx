@@ -13,10 +13,10 @@ import {
   BookIcon,
   CheckIcon,
   ClockIcon,
-  ExternalIcon,
   RepoIcon,
   StarIcon,
 } from '../components/icons'
+import { OpenOnGitHub } from '../components/OpenOnGitHub'
 import { Notice } from '../components/ResultStates'
 import { PageLayout } from '../components/SiteHeader'
 import { TrackIssue } from '../components/TrackIssue'
@@ -115,10 +115,7 @@ const IssueBrief = ({ issue }: { issue: IssueDetail }) => {
           left; actions and facts stacked on the right. */}
       <div className="mt-6 grid items-start gap-6 lg:mt-8 lg:grid-cols-[1fr_20rem] lg:grid-rows-[auto_1fr]">
         <div className="space-y-5 lg:col-start-2 lg:row-start-1">
-          <a href={issue.html_url} target="_blank" rel="noreferrer" className={`${btnPrimary} w-full py-3`}>
-            <ExternalIcon />
-            Open on GitHub
-          </a>
+          <OpenOnGitHub url={issue.html_url} />
           <TrackIssue issueId={issue.id} />
         </div>
 
