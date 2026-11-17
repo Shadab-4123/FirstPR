@@ -23,7 +23,8 @@ type InlineSelectProps = {
   options: FilterOption[]
 }
 
-/** A real <select>, styled as a tinted word inside the sentence. */
+/** A real <select>, styled as a tinted word inside the sentence. `leading-tight` matters: a select
+ *  inherits the sentence's tall line height, which made each pill touch the line below on phones. */
 const InlineSelect = ({ label, value, onChange, options }: InlineSelectProps) => (
   <label className="relative inline-flex items-center">
     <span className="sr-only">{label}</span>
@@ -32,7 +33,7 @@ const InlineSelect = ({ label, value, onChange, options }: InlineSelectProps) =>
       onChange={(e) => onChange(e.target.value)}
       aria-label={label}
       className="cursor-pointer appearance-none [field-sizing:content] rounded-xl border-b-2 border-link-line bg-link-soft py-0.5 pr-9 pl-3
-        font-semibold text-link transition hover:bg-link-line/25"
+        leading-tight font-semibold text-link transition hover:bg-link-line/25"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value} className="text-base font-normal text-body">

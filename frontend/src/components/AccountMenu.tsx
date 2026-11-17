@@ -24,7 +24,8 @@ export const AccountMenu = () => {
     const here = location.pathname + location.search
     return (
       <a href={signInUrl(here)} className={`${btnPrimary} px-4 py-2`}>
-        Sign in with GitHub
+        {/* Phones: the short label, so the theme button and this fit beside the logo. */}
+        Sign in<span className="hidden sm:inline"> with GitHub</span>
       </a>
     )
   }
