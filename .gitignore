@@ -35,3 +35,6 @@ perf/load/results/*.api.log
 
 # Raw demo recording (docs/demo.gif is committed)
 docs/.demo-video/
+
+# Claude Code local settings and skills (not part of the project)
+.claude/
