@@ -10,9 +10,12 @@ export const onRequest = ({ request }) => {
   const url = new URL(request.url)
   const target = new URL(url.pathname + url.search, API_ORIGIN)
   const hasBody = !['GET', 'HEAD'].includes(request.method)
+  // Render picks the app by Host: forwarding "firstpr.pages.dev" gets a 502 "no-deploy".
+  const headers = new Headers(request.headers)
+  headers.delete('host')
   return fetch(target, {
     method: request.method,
-    headers: request.headers,
+    headers,
     body: hasBody ? request.body : undefined,
     // Hand redirects (sign-in to GitHub and back) to the browser instead of following them here.
     redirect: 'manual',
