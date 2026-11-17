@@ -25,3 +25,6 @@ dist-ssr
 # Playwright
 /test-results/
 /playwright-report/
+
+# Cloudflare local dev (wrangler pages dev)
+.wrangler/
