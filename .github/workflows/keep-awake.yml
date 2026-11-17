@@ -1,0 +1,31 @@
+# Keeps the free Render API awake, so visitors don't wait ~50 s for it to start.
+# Render puts a free service to sleep after 15 minutes without requests; this asks
+# every 10 minutes. Free: one always-on service needs ~744 h a month and Render's free
+# plan includes 750 h, and each ping is a few hundred bytes.
+#
+# GitHub may start scheduled runs a few minutes late when it's busy, so on rare
+# occasions the API can still fall asleep between two pings.
+name: Keep API awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+# A ping that's still waiting makes the next one pointless.
+concurrency:
+  group: keep-awake
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the health check
+        # Up to ~3 minutes: enough for a sleeping service to start. Fails only if the API
+        # is really down, so a failed run here is worth looking at.
+        run: |
+          curl --fail --silent --show-error --max-time 60 \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            https://firstpr-api-5lk3.onrender.com/api/v1/health
